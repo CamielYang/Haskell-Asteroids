@@ -7,13 +7,11 @@ import           View
 
 main :: IO ()
 main = do
-	playIO
-		window
-		background
-		frames
-		initialState
-		render
-		handleKeys
-		update
-
-
+  playIO
+    window
+    background
+    frames
+    initialState
+    render
+    handleKeys
+    update
