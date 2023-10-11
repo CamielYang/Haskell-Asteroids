@@ -7,11 +7,12 @@ update :: Float -> GameState -> IO GameState
 update _ = return
 
 handleKeys :: Event -> GameState -> IO GameState
-handleKeys e gameState
-  | currentStatus == Active = return (gameActiveKeys e gameState)
-  | otherwise               = return (gameOverKeys e gameState)
+handleKeys e (GameState )
+  | currentScreen == Menu = return (gameMenuKeys e gameState)
+  | currentScreen == InGame = return (gameActiveKeys e gameState)
+  | otherwise = return (gameOverKeys e gameState)
   where
-    currentStatus = status gameState
+    currentScreen = screen gameState
 
 gameActiveKeys :: Event -> GameState -> GameState
 gameActiveKeys (EventKey (SpecialKey KeyEsc) Down _ _) gameState =
@@ -24,4 +25,11 @@ gameActiveKeys _ gameState = gameState
 
 gameOverKeys :: Event -> GameState -> GameState
 gameOverKeys _ gameState = gameState
+
+obtainPowerUp :: PowerUpType -> Player -> Player
+obtainPowerUp (Heart n) player = player { health = HP (n + getHealth (health player)) }
+  where
+    getHealth :: Health -> Int
+    getHealth (HP v) = v
+obtainPowerUp (Weapon weaponType) player = player { weapon = weaponType }
 
