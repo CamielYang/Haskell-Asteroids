@@ -43,7 +43,7 @@ centerPath p = map (\(x, y) -> (x - xInc, y - yInc)) p
     yInc = minY + (diffY / 2)
 
 renderSpaceShip :: Color -> Picture
-renderSpaceShip c = scale 10 10 $ color c $ lineLoop $ centerPath [(0,0), (1,0),(1,-1), (2,-1), (2,-4), (3,-4), (3,-7), (2,-7), (2,-6), (-1,-6), (-1,-7), (-2,-7), (-2,-4), (-1,-4), (-1,-1), (0,-1), (0,0)]
+renderSpaceShip c = scale 5 5 $ color c $ lineLoop $ centerPath [(0,0), (1,0),(1,-1), (2,-1), (2,-4), (3,-4), (3,-7), (2,-7), (2,-6), (-1,-6), (-1,-7), (-2,-7), (-2,-4), (-1,-4), (-1,-1), (0,-1), (0,0)]
 
 renderMenu :: GameState -> IO Picture
 renderMenu _ = return (
@@ -64,14 +64,17 @@ renderInGame :: GameState -> IO Picture
 renderInGame gameState = return (
     Pictures [
       title,
-      translate (x') (y') $ rotate (getRotation (playerOne gameState)) $ renderSpaceShip red,
-      translate 50 50 $ rotate (getRotation (playerTwo gameState)) $ renderSpaceShip blue
+      translate x1 y1 $ rotate (getRotation (playerOne gameState)) $ renderSpaceShip red,
+      translate x2 y2 $ rotate (getRotation (playerTwo gameState)) $ renderSpaceShip blue,
+      Pictures projectilesPicture
       -- translate (-(fromIntegral width / 2 - 10)) (fromIntegral height / 2 - 20) $ scale 0.1 0.1 $ text (show $ selectedParticle gameState)
     ]
   )
   where
     title = renderText (show $ mode gameState) (-150) 100 0.5 0.5
-    Pos Vector2 { x = x', y = y' } = position $ playerOne gameState
+    Pos Vector2 { x = x1, y = y1 } = position $ playerOne gameState
+    Pos Vector2 { x = x2, y = y2 } = position $ playerTwo gameState
+    projectilesPicture = map (\(Projectile (Pos Vector2 { x = x, y = y }) _) -> translate x y $ color white $ circleSolid 2) $ projectiles $ world gameState
 
 
 

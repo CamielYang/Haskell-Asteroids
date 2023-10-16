@@ -19,7 +19,7 @@ data Mode         = Singleplayer | Multiplayer deriving (Eq, Show)
 
 data AsteroidType = AsteroidLg | AsteroidMd | AsteroidSm deriving (Eq, Ord)
 data Asteroid     = Asteroid AsteroidType Position Velocity
-data Projectile   = Projectile Position Velocity
+data Projectile   = Projectile Position Rotation
 
 data WeaponType   = Default | Shotgun | Rifle
 data PowerUpType  = Heart Int | Weapon WeaponType
