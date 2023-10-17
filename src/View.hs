@@ -65,7 +65,7 @@ renderInGame gs = return (
     Pictures [
       title,
       renderPlayer (playerOne gs) red,
-      if mode gs == Singleplayer then blank else renderPlayer (playerTwo gs) yellow,
+      if mode gs == Multiplayer then renderPlayer (playerTwo gs) yellow else blank,
       renderProjectiles
     ]
   )
