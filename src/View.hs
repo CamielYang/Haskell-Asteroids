@@ -14,7 +14,7 @@ window :: Display
 window = InWindow "Asteroids" (width, height) (100, 100)
 
 background :: Color
-background = black
+background = makeColorI 36 28 65 255
 
 frames :: Int
 frames = 30
@@ -49,13 +49,23 @@ renderMenu :: GameState -> IO Picture
 renderMenu _ = return (
     Pictures [
       title,
-      content,
-      renderSpaceShip red
+      sp,
+      mp
     ]
   )
   where
     title = renderText "Asteroids" (-125) 100 0.5 0.5
-    content = renderText "Press A for singleplayer, D for multiplayer" (-275) 50 0.2 0.2
+    sp = Pictures [
+        renderText "Press A for singleplayer" (-150) 50 0.2 0.2,
+        translate 0 0 $ renderSpaceShip red
+      ]
+    mp = Pictures [
+        renderText "Press D for multiplayer" (-150) (-80) 0.2 0.2,
+        translate (-25) (-130) $ Pictures [
+          renderSpaceShip red,
+          translate 50 0 $ renderSpaceShip yellow
+        ]
+      ]
 
 getRotation :: Player -> Float
 getRotation (Player { rotation = Rot r }) = fromIntegral r
@@ -76,7 +86,5 @@ renderInGame gs = return (
     renderPlayer p c = translate x y $ rotate (getRotation p) $ renderSpaceShip c
       where
         Pos Vector2 { x = x, y = y } = position p
-
-
 
 -- renderGameOver :: GameState -> IO Picture

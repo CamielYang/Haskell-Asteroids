@@ -73,7 +73,7 @@ initialState = GameState {
   screen = Menu,
   mode = Singleplayer,
   playerOne = initialPlayer,
-  playerTwo = initialPlayer,
+  playerTwo = initialPlayer { position = Pos Vector2 { x = 50, y = 0 }},
   score = Score 0,
   status = Active,
   keys = S.empty
