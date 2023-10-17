@@ -61,20 +61,21 @@ getRotation :: Player -> Float
 getRotation (Player { rotation = Rot r }) = fromIntegral r
 
 renderInGame :: GameState -> IO Picture
-renderInGame gameState = return (
+renderInGame gs = return (
     Pictures [
       title,
-      translate x1 y1 $ rotate (getRotation (playerOne gameState)) $ renderSpaceShip red,
-      translate x2 y2 $ rotate (getRotation (playerTwo gameState)) $ renderSpaceShip blue,
-      Pictures projectilesPicture
-      -- translate (-(fromIntegral width / 2 - 10)) (fromIntegral height / 2 - 20) $ scale 0.1 0.1 $ text (show $ selectedParticle gameState)
+      renderPlayer (playerOne gs) red,
+      if mode gs == Singleplayer then blank else renderPlayer (playerTwo gs) yellow,
+      renderProjectiles
     ]
   )
   where
-    title = renderText (show $ mode gameState) (-150) 100 0.5 0.5
-    Pos Vector2 { x = x1, y = y1 } = position $ playerOne gameState
-    Pos Vector2 { x = x2, y = y2 } = position $ playerTwo gameState
-    projectilesPicture = map (\(Projectile (Pos Vector2 { x = x, y = y }) _) -> translate x y $ color white $ circleSolid 2) $ projectiles $ world gameState
+    title = renderText (show $ mode gs) (-50) 250 0.2 0.2
+    renderProjectiles = Pictures $ map (\(Projectile (Pos Vector2 { x = x, y = y }) _) ->
+      translate x y $ color white $ circleSolid 2) $ projectiles $ world gs
+    renderPlayer p c = translate x y $ rotate (getRotation p) $ renderSpaceShip c
+      where
+        Pos Vector2 { x = x, y = y } = position p
 
 
 

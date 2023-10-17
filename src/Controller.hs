@@ -1,7 +1,7 @@
 module Controller where
 
-import           Data.Char                        (GeneralCategory (Space))
 import qualified Data.Set                         as S
+import           Debug.Trace                      (trace, traceShow)
 import           Graphics.Gloss.Interface.IO.Game
 import           Model
 
@@ -14,25 +14,35 @@ degreeToVector d = Vector2 (cos radians) (sin radians)
     radians :: Float
     radians = fromIntegral (-d + 90) * pi / 180
 
-updatePosition :: Player -> Float -> Position
-updatePosition p@(Player { position = Pos (Vector2 x y) }) v = Pos (Vector2 (x + xInc * v) (y + yInc * v))
+lengthOfVector :: Vector2 -> Float
+lengthOfVector Vector2 { x = x, y = y } = sqrt (x * x + y * y)
+
+updatePosition :: Player -> Velocity -> Position
+updatePosition p@(Player { position = Pos (Vector2 x y) }) (Vel Vector2 { x = vx, y = vy }) = Pos (Vector2 (x + vx) (y + vy))
+
+updateVelocity :: Player -> Float -> Velocity
+updateVelocity p@(Player { velocity = Vel (Vector2 x y) }) v = if lengthOfVector newV2 > 10
+  then velocity p
+  else Vel newV2
   where
     Rot d = rotation p
     Vector2 { x = xInc, y = yInc } = degreeToVector d
+    newV2 = Vector2 ((x + xInc * v) * 0.95) ((y + yInc * v) * 0.95)
 
 updatePlayer :: GameState -> Player -> Key -> Key -> Key -> Key -> Key -> (Player, [Projectile])
 updatePlayer gs p@(Player { position = Pos (Vector2 x y), rotation = Rot rot }) u d l r s = do
   (p {
       rotation = if S.member l (keys gs)
-        then updateRotation p (-10)
-        else if S.member r (keys gs)
-          then updateRotation p 10
-          else rotation p
-    , position = if S.member u (keys gs)
-        then updatePosition p 15
-        else if S.member d (keys gs)
-          then updatePosition p (-15)
-          else position p
+                  then updateRotation p (-10)
+                  else if S.member r (keys gs)
+                    then updateRotation p 10
+                    else rotation p
+    , position = updatePosition p v
+    , velocity = if S.member u (keys gs)
+                  then updateVelocity p 0.5
+                  else if S.member d (keys gs)
+                    then updateVelocity p (-0.5)
+                    else Vel Vector2 { x = vx * 0.95, y = vy * 0.95 }
     },
     if S.member s (keys gs)
         then
@@ -41,6 +51,7 @@ updatePlayer gs p@(Player { position = Pos (Vector2 x y), rotation = Rot rot }) 
           ps)
     where
       Vector2 { x = xInc, y = yInc } = degreeToVector rot
+      v@(Vel Vector2 { x = vx, y = vy }) = velocity p
       ps = projectiles (world gs)
 
 updateProjectiles :: GameState -> GameState
@@ -60,7 +71,8 @@ disableKeys s (k:ks)
   | otherwise = disableKeys s ks
 
 update :: Float -> GameState -> IO GameState
-update _ gs = do
+update d gs = do
+  -- traceShow d (return ())
   let newGs = updateProjectiles gs
 
   let gs1 = (\(p1, ps) -> newGs {
@@ -75,17 +87,19 @@ update _ gs = do
                   (Char 'd')
                   (SpecialKey KeySpace))
 
-  let gs2 = (\(p, ps) -> gs1 {
-              playerTwo = p
-            , world = (world gs1) { projectiles = ps }
-          }) (updatePlayer
-                gs1
-                (playerTwo gs1)
-                (SpecialKey KeyUp)
-                (SpecialKey KeyDown)
-                (SpecialKey KeyLeft)
-                (SpecialKey KeyRight)
-                (SpecialKey KeyEnter))
+  let gs2 = if mode gs == Singleplayer
+              then gs1
+              else (\(p, ps) -> gs1 {
+                  playerTwo = p
+                , world = (world gs1) { projectiles = ps }
+              }) (updatePlayer
+                    gs1
+                    (playerTwo gs1)
+                    (SpecialKey KeyUp)
+                    (SpecialKey KeyDown)
+                    (SpecialKey KeyLeft)
+                    (SpecialKey KeyRight)
+                    (SpecialKey KeyEnter))
 
   return gs2 {
     keys = disableKeys (keys gs2) [SpecialKey KeyEnter, SpecialKey KeySpace]
