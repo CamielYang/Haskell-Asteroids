@@ -11,7 +11,7 @@ newtype Position  = Pos Vector2
 newtype Velocity  = Vel Vector2
 newtype Rotation  = Rot Int
 newtype Health    = HP Int
-newtype Score     = Score Int
+newtype Score     = Score Int deriving (Show)
 
 data Screen       = Menu | InGame | GameOver deriving (Eq)
 data Status       = Paused | Active deriving (Eq)

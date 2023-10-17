@@ -10,6 +10,12 @@ width, height :: Int
 width = 800
 height = 600
 
+windowLeft, windowRight, windowTop, windowBottom :: Float
+windowLeft = fromIntegral (-width) / 2
+windowRight = fromIntegral width / 2
+windowTop = fromIntegral height / 2
+windowBottom = fromIntegral (-height) / 2
+
 window :: Display
 window = InWindow "Asteroids" (width, height) (100, 100)
 
@@ -70,21 +76,33 @@ renderMenu _ = return (
 getRotation :: Player -> Float
 getRotation (Player { rotation = Rot r }) = fromIntegral r
 
+getHp :: Player -> Int
+getHp (Player { health = HP hp }) = hp
+
 renderInGame :: GameState -> IO Picture
 renderInGame gs = return (
     Pictures [
+      renderPlayer p1 red,
+      if isMp then renderPlayer p2 yellow else blank,
+      renderProjectiles,
       title,
-      renderPlayer (playerOne gs) red,
-      if mode gs == Multiplayer then renderPlayer (playerTwo gs) yellow else blank,
-      renderProjectiles
+      renderScore,
+      renderHpP1,
+      renderHpP2
     ]
   )
   where
-    title = renderText (show $ mode gs) (-50) 250 0.2 0.2
+    title = renderText (show $ mode gs) (-75) (windowTop - 40) 0.2 0.2
+    isMp = mode gs == Multiplayer
+    p1 = playerOne gs
+    p2 = playerTwo gs
+    renderScore = renderText (show $ score gs) (-50) (windowBottom + 25) 0.2 0.2
+    renderHpP1 = Pictures [translate (windowLeft + (25 * fromIntegral hp)) (windowTop - 25) $ scale 0.5 0.5 $ renderSpaceShip red | hp <- [1..getHp p1]]
+    renderHpP2 = if isMp then Pictures [translate (windowRight - (25 * fromIntegral hp)) (windowTop - 25) $ scale 0.5 0.5 $ renderSpaceShip yellow | hp <- [1..getHp p2]] else blank
     renderProjectiles = Pictures $ map (\(Projectile (Pos Vector2 { x = x, y = y }) _) ->
       translate x y $ color white $ circleSolid 2) $ projectiles $ world gs
     renderPlayer p c = translate x y $ rotate (getRotation p) $ renderSpaceShip c
       where
-        Pos Vector2 { x = x, y = y } = position p
+        Pos (Vector2 x y) = position p
 
 -- renderGameOver :: GameState -> IO Picture

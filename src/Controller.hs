@@ -7,10 +7,10 @@ import           Model
 
 force, drag, maxVelocity, projectileSpeed :: Float
 rotationSpeed :: Int
-force = 0.5
-drag = 0.95
+force = 0.3
+drag = 0.98
 maxVelocity = 10
-projectileSpeed = 40
+projectileSpeed = 10
 rotationSpeed = 10
 
 updateRotation :: Player -> Int -> Rotation
@@ -23,10 +23,10 @@ degreeToVector d = Vector2 (cos radians) (sin radians)
     radians = fromIntegral (-d + 90) * pi / 180
 
 lengthOfVector :: Vector2 -> Float
-lengthOfVector Vector2 { x = x, y = y } = sqrt (x * x + y * y)
+lengthOfVector (Vector2 x y) = sqrt (x * x + y * y)
 
 updatePosition :: Player -> Velocity -> Position
-updatePosition p@(Player { position = Pos (Vector2 x y) }) (Vel Vector2 { x = vx, y = vy }) = Pos (Vector2 (x + vx) (y + vy))
+updatePosition p@(Player { position = Pos (Vector2 x y) }) (Vel (Vector2 vx vy)) = Pos (Vector2 (x + vx) (y + vy))
 
 updateVelocity :: Player -> Float -> Velocity
 updateVelocity p@(Player { velocity = Vel (Vector2 x y) }) v = if lengthOfVector newV2 > maxVelocity
@@ -34,33 +34,34 @@ updateVelocity p@(Player { velocity = Vel (Vector2 x y) }) v = if lengthOfVector
   else Vel newV2
   where
     Rot d = rotation p
-    Vector2 { x = xInc, y = yInc } = degreeToVector d
+    Vector2 xInc yInc = degreeToVector d
     newV2 = Vector2 ((x + xInc * v) * drag) ((y + yInc * v) * drag)
 
 updatePlayer :: GameState -> Player -> Key -> Key -> Key -> Key -> Key -> (Player, [Projectile])
-updatePlayer gs p@(Player { position = Pos (Vector2 x y), rotation = Rot rot }) u d l r s = do
+updatePlayer gs p@(Player { rotation = Rot rot }) u d l r s = do
   (p {
       rotation = if S.member l (keys gs)
                   then updateRotation p (-rotationSpeed)
                   else if S.member r (keys gs)
                     then updateRotation p rotationSpeed
                     else rotation p
-    , position = updatePosition p v
+    , position = newPos
     , velocity = if S.member u (keys gs)
                   then updateVelocity p force
                   else if S.member d (keys gs)
-                    then updateVelocity p (-force)
+                    then updateVelocity p (-force / 2)
                     else Vel Vector2 { x = vx * drag, y = vy * drag }
     },
     if S.member s (keys gs)
         then
-          Projectile (Pos (Vector2 (x + xInc * projectileSpeed) (y + yInc * projectileSpeed))) (Rot rot) : ps
+          Projectile (Pos (Vector2 (xNew + xInc * 25) (yNew + yInc * 25))) (Rot rot) : ps
         else
           ps)
     where
-      Vector2 { x = xInc, y = yInc } = degreeToVector rot
-      v@(Vel Vector2 { x = vx, y = vy }) = velocity p
+      Vector2 xInc yInc = degreeToVector rot
+      v@(Vel (Vector2 vx vy)) = velocity p
       ps = projectiles (world gs)
+      newPos@(Pos (Vector2 xNew yNew)) = updatePosition p v
 
 updateProjectiles :: GameState -> GameState
 updateProjectiles gs@(GameState { world = World { projectiles = [] } }) = gs
@@ -68,7 +69,7 @@ updateProjectiles gs@(GameState { world = World { projectiles = ps } }) = gs {
     world = (world gs) { projectiles = map func ps }
   }
   where
-    func (Projectile (Pos (Vector2 x y)) (Rot r)) = Projectile (Pos (Vector2 (x + xInc * 10) (y + yInc * 10))) (Rot r)
+    func (Projectile (Pos (Vector2 x y)) (Rot r)) = Projectile (Pos (Vector2 (x + xInc * projectileSpeed) (y + yInc * projectileSpeed))) (Rot r)
       where
         Vector2 { x = xInc, y = yInc } = degreeToVector r
 
