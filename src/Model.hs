@@ -7,6 +7,7 @@ data Vector2  = Vector2 {
   x :: Float,
   y :: Float
 }
+
 newtype Position  = Pos Vector2
 newtype Velocity  = Vel Vector2
 newtype Rotation  = Rot Int
@@ -62,19 +63,19 @@ initialPlayer = Player {
 
 initialWorld :: World
 initialWorld = World {
-  asteroids = [],
+  asteroids   = [],
   projectiles = [],
-  powerUps = []
+  powerUps    = []
 }
 
 initialState :: GameState
 initialState = GameState {
-  world = initialWorld,
-  screen = Menu,
-  mode = Singleplayer,
+  world     = initialWorld,
+  screen    = Menu,
+  mode      = Singleplayer,
   playerOne = initialPlayer,
   playerTwo = initialPlayer { position = Pos Vector2 { x = 50, y = 0 }},
-  score = Score 0,
-  status = Active,
-  keys = S.empty
+  score     = Score 0,
+  status    = Active,
+  keys      = S.empty
 }
