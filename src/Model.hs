@@ -1,22 +1,25 @@
 module Model where
 
+import qualified Data.Set                         as S
+import           Graphics.Gloss.Interface.IO.Game
+
 data Vector2  = Vector2 {
-  x :: Int,
-  y :: Int
+  x :: Float,
+  y :: Float
 }
 newtype Position  = Pos Vector2
 newtype Velocity  = Vel Vector2
 newtype Rotation  = Rot Int
 newtype Health    = HP Int
-newtype Score     = Score Int
+newtype Score     = Score Int deriving (Show)
 
 data Screen       = Menu | InGame | GameOver deriving (Eq)
 data Status       = Paused | Active deriving (Eq)
-data Mode         = Singleplayer | Multiplayer deriving (Eq)
+data Mode         = Singleplayer | Multiplayer deriving (Eq, Show)
 
 data AsteroidType = AsteroidLg | AsteroidMd | AsteroidSm deriving (Eq, Ord)
 data Asteroid     = Asteroid AsteroidType Position Velocity
-data Projectile   = Projectile Position Velocity
+data Projectile   = Projectile Position Rotation
 
 data WeaponType   = Default | Shotgun | Rifle
 data PowerUpType  = Heart Int | Weapon WeaponType
@@ -31,16 +34,21 @@ data Player       = Player {
   weapon   :: WeaponType
 }
 
-data GameState = GameState {
+data World = World {
   asteroids   :: [Asteroid],
   projectiles :: [Projectile],
-  powerUps    :: [PowerUp],
-  screen      :: Screen,
-  mode        :: Mode,
-  playerOne   :: Player,
-  playerTwo   :: Player,
-  score       :: Score,
-  status      :: Status
+  powerUps    :: [PowerUp]
+}
+
+data GameState = GameState {
+  world     :: World,
+  screen    :: Screen,
+  mode      :: Mode,
+  playerOne :: Player,
+  playerTwo :: Player,
+  score     :: Score,
+  status    :: Status,
+  keys      :: S.Set Key
 }
 
 initialPlayer :: Player
@@ -52,15 +60,21 @@ initialPlayer = Player {
   weapon   = Default
 }
 
-initialState :: GameState
-initialState = GameState {
+initialWorld :: World
+initialWorld = World {
   asteroids = [],
   projectiles = [],
-  powerUps = [],
+  powerUps = []
+}
+
+initialState :: GameState
+initialState = GameState {
+  world = initialWorld,
   screen = Menu,
   mode = Singleplayer,
   playerOne = initialPlayer,
-  playerTwo = initialPlayer,
+  playerTwo = initialPlayer { position = Pos Vector2 { x = 50, y = 0 }},
   score = Score 0,
-  status = Active
+  status = Active,
+  keys = S.empty
 }
