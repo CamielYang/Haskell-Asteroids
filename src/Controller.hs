@@ -1,5 +1,7 @@
 module Controller where
 
+import qualified Data.Set                         as S
+import           Debug.Trace                      (trace, traceShow)
 import           Graphics.Gloss.Interface.IO.Game
 import           Model
 
