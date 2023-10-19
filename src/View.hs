@@ -1,15 +1,10 @@
 module View where
 
 import           Graphics.Gloss
-import           Graphics.Gloss.Interface.IO.Game
 import           Model
 import           Screens.Game
 import           Screens.Menu
 import           ViewLib
-
-import qualified Data.Set                         as S
-
-import qualified Data.Set                         as S
 
 window :: Display
 window = InWindow "Asteroids" (width, height) (100, 100)
