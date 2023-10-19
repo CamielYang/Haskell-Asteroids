@@ -11,16 +11,6 @@ import qualified Data.Set                         as S
 
 import qualified Data.Set                         as S
 
-width, height :: Int
-width = 800
-height = 600
-
-windowLeft, windowRight, windowTop, windowBottom :: Float
-windowLeft = fromIntegral (-width) / 2
-windowRight = fromIntegral width / 2
-windowTop = fromIntegral height / 2
-windowBottom = fromIntegral (-height) / 2
-
 window :: Display
 window = InWindow "Asteroids" (width, height) (100, 100)
 
