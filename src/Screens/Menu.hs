@@ -9,16 +9,17 @@ menuKeys (EventKey (Char 'a') Down _ _) _ = initialState { screen = InGame, mode
 menuKeys (EventKey (Char 'd') Down _ _) _ = initialState { screen = InGame, mode = Multiplayer }
 menuKeys _ gameState = gameState
 
-
 -- View
 renderMenu :: GameState -> IO Picture
-renderMenu _ = return (
+renderMenu gs = do
+  return $
     Pictures [
       title,
       sp,
-      mp
+      mp,
+      renderAsteroids
     ]
-  )
+
   where
     title = renderText "Asteroids" (-125) 100 0.5 0.5
     sp = Pictures [
@@ -32,3 +33,5 @@ renderMenu _ = return (
           translate 50 0 $ renderSpaceShip yellow
         ]
       ]
+    renderAsteroids = Pictures $ map (\(Asteroid _ p (Pos (Vector2 x' y')) _) ->
+      translate x' y' $ p) $ asteroids $ world gs
