@@ -1,4 +1,4 @@
-module Controller where
+module Controller (update, handleKeys) where
 
 -- import           Debug.Trace                      (trace, traceShow)
 import           Graphics.Gloss.Interface.IO.Game
@@ -17,7 +17,7 @@ update d gs
 handleKeys :: Event -> GameState -> IO GameState
 handleKeys e gameState
   | currentScreen == Menu = return (menuKeys e gameState)
-  | currentScreen == InGame = return (inGameKeys e gameState)
+  | currentScreen == InGame = return (gameKeys e gameState)
   | otherwise = return (gameOverKeys e gameState)
   where
     currentScreen = screen gameState

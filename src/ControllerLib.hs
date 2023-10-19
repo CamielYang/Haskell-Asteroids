@@ -1,1 +1,1 @@
-module ControllerLib where
+module ControllerLib () where

@@ -1,4 +1,4 @@
-module Screens.Menu where
+module Screens.Menu (menuKeys, renderMenu) where
 import           Graphics.Gloss.Interface.IO.Game
 import           Model
 import           ViewLib

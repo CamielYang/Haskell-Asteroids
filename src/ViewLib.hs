@@ -13,10 +13,10 @@ windowTop = fromIntegral height / 2
 windowBottom = fromIntegral (-height) / 2
 
 renderText :: String -> Float -> Float -> Float -> Float -> Picture
-renderText t x y sx sy = translate x y $ scale sx sy $ color white $ text t
+renderText t x' y' sx sy = translate x' y' $ scale sx sy $ color white $ text t
 
 centerPath :: [Point] -> [Point]
-centerPath p = map (\(x, y) -> (x - xInc, y - yInc)) p
+centerPath p = map (\(x', y') -> (x' - xInc, y' - yInc)) p
   where
     minX = minimum $ map fst p
     minY = minimum $ map snd p
