@@ -1,23 +1,15 @@
-module Screens.Game (updateGame, gameKeys, renderGame) where
-import           Control.Monad                    (mapM)
+module Controllers.Game (updateGame, gameKeys) where
 import qualified Data.Set                         as S
-import           Debug.Trace
-import           GHC.IO.Buffer                    (checkBuffer)
 import           Graphics.Gloss.Interface.IO.Game
 import           Model
-import           Utils.Collision                  (circleCollision,
-                                                   largestDistance)
+import           Utils.Collision
+import           Utils.Keys
 import           Utils.Lib
-import           Utils.Path
-import           Utils.Point                      (rotatePath, scalePath,
-                                                   translatePath)
-import           Utils.ViewLib                    (getHp, getRotation,
-                                                   renderAsteroid,
-                                                   renderSpaceShip, renderText,
-                                                   windowBottom, windowLeft,
-                                                   windowRight, windowTop)
+import           Utils.PathModels
+import           Utils.Point
+import           Utils.Random
+import           Utils.Render
 
--- Controller
 force, drag, maxVelocity, projectileSpeed :: Float
 rotationSpeed :: Int
 force = 0.3
@@ -64,11 +56,15 @@ updatePlayer gs p@(Player { rotation = Rot rot }) u d l r s = do
       ps = projectiles (world gs)
       newPos@(Pos (Vector2 xNew yNew)) = updatePosition p v
 
-updateProjectiles :: GameState -> [Projectile]
-updateProjectiles (GameState { world = World { projectiles = [] } }) = []
+updateProjectiles :: GameState -> GameState
+updateProjectiles gs@(GameState { world = World { projectiles = [] } }) = gs
 updateProjectiles gs@(GameState { world = World { projectiles = ps } }) =
-  map func $ filter notCollided ps
+  gs {
+    world = (world gs) { projectiles = map func filtered },
+    score = if length ps /= length filtered then addScore (score gs) else score gs
+  }
   where
+    filtered = filter notCollided ps
     notCollided :: Projectile -> Bool
     notCollided (Projectile (Pos (Vector2 x' y')) _) = not $ any check (asteroids $ world gs)
       where
@@ -81,29 +77,31 @@ updateProjectiles gs@(GameState { world = World { projectiles = ps } }) =
 updateAsteroids :: GameState -> IO [Asteroid]
 updateAsteroids (GameState { world = World { asteroids = as, projectiles = ps } }) = do
   mapped <- mapM func as
-  let newAt = concat mapped
+  let newAs = concat mapped
 
   if length as < 10
     then do
       newAsteroid <- asteroidPath
-      rot <- drawInt 0 360
-      return $ Asteroid newAsteroid (Pos (Vector2 0 0)) (Rot rot) : newAt
-    else return newAt
+      rot <- randomInt 0 360
+      x <- randomFloat windowLeft windowRight
+      y <- randomFloat windowBottom windowTop
+      return $ Asteroid newAsteroid (Pos (Vector2 x y)) (Rot rot) : newAs
+    else return newAs
   where
     func :: Asteroid -> IO [Asteroid]
     func asteroid@(Asteroid path (Pos (Vector2 x' y')) (Rot r))
       | collided && ld >= 30 = do
-          a1 <- randAsteroidMove asteroid
-          a2 <- randAsteroidMove asteroid
+          a1 <- splitAsteroid asteroid
+          a2 <- splitAsteroid asteroid
           return [a1,a2]
       | collided && ld < 30 = return []
       | otherwise = return [Asteroid path (Pos (Vector2 (x' + xInc) (y' + yInc))) (Rot r)]
       where
-        randAsteroidMove :: Asteroid -> IO Asteroid
-        randAsteroidMove (Asteroid _ (Pos (Vector2 x'' y'')) _) = do
-          drawX <- drawFloat 0 10
-          drawY <- drawFloat 0 10
-          drawR <- drawInt 0 360
+        splitAsteroid :: Asteroid -> IO Asteroid
+        splitAsteroid (Asteroid _ (Pos (Vector2 x'' y'')) _) = do
+          drawX <- randomFloat 0 10
+          drawY <- randomFloat 0 10
+          drawR <- randomInt 0 360
           path' <- asteroidPath
           return $ Asteroid (scalePath 0.5 path') (Pos (Vector2 (x'' + drawX) (y'' + drawY))) (Rot drawR)
         ld = largestDistance path
@@ -111,46 +109,30 @@ updateAsteroids (GameState { world = World { asteroids = as, projectiles = ps } 
         check (Projectile (Pos (Vector2 x'' y'')) _) = circleCollision (x'', y'') (x', y') [(1,1)] path
         Vector2 { x = xInc, y = yInc } = degreeToVector r
 
-updateWold :: GameState -> IO GameState
-updateWold gs = do
+updateWorld :: GameState -> IO GameState
+updateWorld gs = do
   newAs <- updateAsteroids gs
-  return gs {
-    world = World {
+  let newGs = updateProjectiles gs
+
+  return newGs {
+    world = (world newGs) {
       asteroids = newAs,
-      projectiles = updateProjectiles gs,
       powerUps = []
     }
   }
 
-
-disableKeys :: S.Set Key -> [Key] -> S.Set Key
-disableKeys s [] = s
-disableKeys s (k:ks)
-  | S.member k s = disableKeys (S.delete k s) ks
-  | otherwise = disableKeys s ks
-
-gameKeys :: Event -> GameState -> GameState
-gameKeys (EventKey (SpecialKey KeyEsc) Down _ _) gameState =
-  gameState { status = toggleStatus (status gameState) }
-  where
-    toggleStatus Active = Paused
-    toggleStatus Paused = Active
-gameKeys (EventKey k Down _ _) gameState = gameState { keys = S.insert k (keys gameState)}
-gameKeys (EventKey k Up _ _) gameState = gameState { keys = S.delete k (keys gameState)}
-gameKeys _ gameState = gameState
-
-obtainPowerUp :: PowerUpType -> Player -> Player
-obtainPowerUp (Heart n) player = player { health = HP (n + getHealth (health player)) }
-  where
-    getHealth :: Health -> Int
-    getHealth (HP v) = v
-obtainPowerUp (Weapon weaponType) player = player { weapon = weaponType }
+-- obtainPowerUp :: PowerUpType -> Player -> Player
+-- obtainPowerUp (Heart n) player = player { health = HP (n + getHealth (health player)) }
+--   where
+--     getHealth :: Health -> Int
+--     getHealth (HP v) = v
+-- obtainPowerUp (Weapon weaponType) player = player { weapon = weaponType }
 
 updateGame :: Float -> GameState -> IO GameState
 updateGame _ gs = do
   -- traceShow (translatePath (getPos $ playerOne gs) shipPath) (return ())
   -- traceShow shipPath (return ())
-  newGs <- updateWold gs
+  newGs <- updateWorld gs
   let gs1 = (\(p1, ps) -> newGs {
 
                 playerOne = p1
@@ -182,36 +164,12 @@ updateGame _ gs = do
     keys = disableKeys (keys gs2) [SpecialKey KeyEnter, SpecialKey KeySpace]
   }
 
-getPos :: Player -> Point
-getPos (Player { position = Pos (Vector2 x' y') }) = (x', y')
-
-
--- View
-renderGame :: GameState -> IO Picture
-renderGame gs = return (
-  Pictures [
-      renderPlayer p1 red,
-      if isMp then renderPlayer p2 yellow else blank,
-      renderProjectiles,
-      renderAsteroids,
-      title,
-      renderScore,
-      renderHpP1,
-      renderHpP2
-    ]
-  )
+gameKeys :: Event -> GameState -> GameState
+gameKeys (EventKey (SpecialKey KeyEsc) Down _ _) gameState =
+  gameState { status = toggleStatus (status gameState) }
   where
-    title = renderText (show $ mode gs) (-75) (windowTop - 40) 0.2 0.2
-    isMp = mode gs == Multiplayer
-    p1 = playerOne gs
-    p2 = playerTwo gs
-    renderScore = renderText (show $ score gs) (-50) (windowBottom + 25) 0.2 0.2
-    renderHpP1 = Pictures [translate (windowLeft + (25 * fromIntegral hp)) (windowTop - 25) $ scale 0.5 0.5 $ renderSpaceShip red | hp <- [1..getHp p1]]
-    renderHpP2 = if isMp then Pictures [translate (windowRight - (25 * fromIntegral hp)) (windowTop - 25) $ scale 0.5 0.5 $ renderSpaceShip yellow | hp <- [1..getHp p2]] else blank
-    renderProjectiles = Pictures $ map (\(Projectile (Pos (Vector2 x' y')) _) ->
-      translate x' y' $ color white $ circleSolid 2) $ projectiles $ world gs
-    renderPlayer p c = translate x' y' $ rotate (fromIntegral $ getRotation p) $ renderSpaceShip c
-      where
-        Pos (Vector2 x' y') = position p
-    renderAsteroids = Pictures $ map (\(Asteroid p (Pos (Vector2 x' y')) _) ->
-      translate x' y' $ renderAsteroid p) $ asteroids $ world gs
+    toggleStatus Active = Paused
+    toggleStatus Paused = Active
+gameKeys (EventKey k Down _ _) gameState = gameState { keys = S.insert k (keys gameState)}
+gameKeys (EventKey k Up _ _) gameState = gameState { keys = S.delete k (keys gameState)}
+gameKeys _ gameState = gameState

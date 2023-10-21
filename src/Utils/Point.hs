@@ -1,21 +1,19 @@
 module Utils.Point where
 
 import           Graphics.Gloss
-import qualified Graphics.Gloss.Data.Point.Arithmetic as P
-import           Graphics.Gloss.Data.Vector           (magV)
 import           Utils.Lib
 
-rotateVCW :: Int -> Point -> Point
-rotateVCW d (x,y) = (x * cos rad - y * sin rad
+rotatePointCW :: Int -> Point -> Point
+rotatePointCW d (x,y) = (x * cos rad - y * sin rad
                     ,x * sin rad + y * cos rad)
                     where
                       rad = degreeToRadian (-d)
 
-rotatePath :: Int -> [Point] -> [Point]
-rotatePath d = map (rotateVCW d)
+rotatePath :: Int -> Path -> Path
+rotatePath d = map (rotatePointCW d)
 
-translatePath :: Point -> [Point] -> [Point]
+translatePath :: Point -> Path -> Path
 translatePath (x', y') = map (\(x,y) -> (x + x', y + y'))
 
-scalePath :: Float -> [Point] -> [Point]
+scalePath :: Float -> Path -> Path
 scalePath s = map (\(x,y) -> (x * s, y * s))

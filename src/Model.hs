@@ -12,6 +12,7 @@ newtype Position  = Pos Vector2 deriving (Show)
 newtype Velocity  = Vel Vector2
 newtype Rotation  = Rot Int
 newtype Health    = HP Int
+
 newtype Score     = Score Int deriving (Show)
 
 data Screen       = Menu | InGame | GameOver deriving (Eq)
@@ -79,3 +80,18 @@ initialState = GameState {
   status    = Active,
   keys      = S.empty
 }
+
+getRotation :: Player -> Int
+getRotation (Player { rotation = Rot r }) = r
+
+updateRotation :: Player -> Int -> Rotation
+updateRotation (Player { rotation = Rot r }) d
+  | r + d > 360 = Rot (r + d - 360)
+  | r + d < 0   = Rot (r + d + 360)
+  | otherwise   = Rot (r + d)
+
+getHp :: Player -> Int
+getHp (Player { health = HP hp }) = hp
+
+addScore :: Score -> Score
+addScore (Score s) = Score (s + 1)

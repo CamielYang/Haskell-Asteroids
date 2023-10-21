@@ -25,16 +25,20 @@ source-repository head
 
 library
   exposed-modules:
-      Controller
+      Controllers.Controller
+      Controllers.Game
+      Controllers.Menu
       Model
-      Screens.Game
-      Screens.Menu
       Utils.Collision
+      Utils.Keys
       Utils.Lib
-      Utils.Path
+      Utils.PathModels
       Utils.Point
-      Utils.ViewLib
-      View
+      Utils.Random
+      Utils.Render
+      Views.Game
+      Views.Menu
+      Views.View
   other-modules:
       Paths_asteroids
   autogen-modules:

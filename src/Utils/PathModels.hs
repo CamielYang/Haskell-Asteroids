@@ -1,11 +1,12 @@
-module Utils.Path (shipPath, asteroidPath) where
+module Utils.PathModels (
+  shipPath,
+  asteroidPath
+) where
 import           Graphics.Gloss
-import           Model
-import           Model          (AsteroidType)
-import           Utils.Lib
 import           Utils.Point    (scalePath)
+import           Utils.Random
 
-centerPath :: [Point] -> [Point]
+centerPath :: Path -> Path
 centerPath p = map (\(x', y') -> (x' - xInc, y' - yInc)) p
   where
     minX = minimum $ map fst p
@@ -17,11 +18,11 @@ centerPath p = map (\(x', y') -> (x' - xInc, y' - yInc)) p
     xInc = minX + (diffX / 2)
     yInc = minY + (diffY / 2)
 
-shipPath :: [Point]
+shipPath :: Path
 shipPath = scalePath 5 $ centerPath [(0,0), (1,0),(1,-1), (2,-1), (2,-4), (3,-4), (3,-7), (2,-7), (2,-6), (-1,-6), (-1,-7), (-2,-7), (-2,-4), (-1,-4), (-1,-1), (0,-1), (0,0)]
 
-asteroidPath :: IO [Point]
+asteroidPath :: IO Path
 asteroidPath = do
-  size <- drawFloat 15 40
-  asteroidGen <- randomizeCoords [(0,0), (1,0),(2,-1), (2,-2), (1,-3), (0,-3), (-1,-2), (-1,-1)]
+  size <- randomFloat 15 40
+  asteroidGen <- deviatePath 0.5 1 [(0,0), (1,0),(2,-1), (2,-2), (1,-3), (0,-3), (-1,-2), (-1,-1)]
   return $ scalePath size $ centerPath asteroidGen

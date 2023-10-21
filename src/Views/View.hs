@@ -1,10 +1,15 @@
-module View where
+module Views.View (
+  window,
+  background,
+  frames,
+  render
+) where
 
 import           Graphics.Gloss
 import           Model
-import           Screens.Game
-import           Screens.Menu
-import           Utils.ViewLib
+import           Utils.Render
+import           Views.Game
+import           Views.Menu
 
 window :: Display
 window = InWindow "Asteroids" (width, height) (100, 100)
@@ -22,5 +27,3 @@ render gs
   | otherwise = renderMenu gs
   where
     currentScreen = screen gs
-
--- renderGameOver :: GameState -> IO Picture

@@ -1,11 +1,9 @@
 module Main where
 
-import           Controller
+import           Controllers.Controller
 import           Graphics.Gloss.Interface.IO.Game
 import           Model
-import           View
-import           Utils.ViewLib
-import           Utils.Path
+import           Views.View
 
 main :: IO ()
 main = do

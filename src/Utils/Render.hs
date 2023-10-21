@@ -1,8 +1,6 @@
-module Utils.ViewLib where
+module Utils.Render where
 import           Graphics.Gloss
-import           Model
-import           Utils.Lib
-import           Utils.Path
+import           Utils.PathModels
 import           Utils.Point
 
 width, height :: Int
@@ -26,10 +24,3 @@ renderSpaceShip' = color white $ lineLoop $ rotatePath 45 shipPath
 
 renderAsteroid :: Path -> Picture
 renderAsteroid p = color white $ lineLoop p
-
-
-getRotation :: Player -> Int
-getRotation (Player { rotation = Rot r }) = r
-
-getHp :: Player -> Int
-getHp (Player { health = HP hp }) = hp

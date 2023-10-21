@@ -1,11 +1,10 @@
-module Controller (update, handleKeys) where
+module Controllers.Controller (update, handleKeys) where
 
--- import           Debug.Trace                      (trace, traceShow)
 import           Graphics.Gloss.Interface.IO.Game
 import           Model
 
-import           Screens.Game
-import           Screens.Menu                     (menuKeys)
+import           Controllers.Game
+import           Controllers.Menu
 
 update :: Float -> GameState -> IO GameState
 update d gs
@@ -18,10 +17,6 @@ handleKeys :: Event -> GameState -> IO GameState
 handleKeys e gameState
   | currentScreen == Menu = return (menuKeys e gameState)
   | currentScreen == InGame = return (gameKeys e gameState)
-  | otherwise = return (gameOverKeys e gameState)
+  | otherwise = return gameState
   where
     currentScreen = screen gameState
-
-gameOverKeys :: Event -> GameState -> GameState
-gameOverKeys _ gameState = gameState
-
