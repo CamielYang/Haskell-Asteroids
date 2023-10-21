@@ -4,7 +4,7 @@ import           Graphics.Gloss
 import           Model
 import           Screens.Game
 import           Screens.Menu
-import           ViewLib
+import           Utils.ViewLib
 
 window :: Display
 window = InWindow "Asteroids" (width, height) (100, 100)

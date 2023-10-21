@@ -1,8 +1,19 @@
 module Screens.Game (updateGame, gameKeys, renderGame) where
+import           Control.Monad                    (mapM)
 import qualified Data.Set                         as S
+import           Debug.Trace
+import           GHC.IO.Buffer                    (checkBuffer)
 import           Graphics.Gloss.Interface.IO.Game
 import           Model
-import           ViewLib
+import           Utils.Collision                  (circleCollision)
+import           Utils.Lib
+import           Utils.Path
+import           Utils.Point                      (rotatePath, translatePath)
+import           Utils.ViewLib                    (getHp, getRotation,
+                                                   renderAsteroid,
+                                                   renderSpaceShip, renderText,
+                                                   windowBottom, windowLeft,
+                                                   windowRight, windowTop)
 
 -- Controller
 force, drag, maxVelocity, projectileSpeed :: Float
@@ -12,18 +23,6 @@ drag = 0.98
 maxVelocity = 10
 projectileSpeed = 10
 rotationSpeed = 10
-
-updateRotation :: Player -> Int -> Rotation
-updateRotation (Player { rotation = Rot r }) d = Rot (r + d)
-
-degreeToVector :: Int -> Vector2
-degreeToVector d = Vector2 (cos radians) (sin radians)
-  where
-    radians :: Float
-    radians = fromIntegral (-d + 90) * pi / 180
-
-lengthOfVector :: Vector2 -> Float
-lengthOfVector (Vector2 x' y') = sqrt (x' * x' + y' * y')
 
 updatePosition :: Player -> Velocity -> Position
 updatePosition (Player { position = Pos (Vector2 x' y') }) (Vel (Vector2 vx vy)) = Pos (Vector2 (x' + vx) (y' + vy))
@@ -63,13 +62,32 @@ updatePlayer gs p@(Player { rotation = Rot rot }) u d l r s = do
       ps = projectiles (world gs)
       newPos@(Pos (Vector2 xNew yNew)) = updatePosition p v
 
-updateProjectiles :: GameState -> GameState
-updateProjectiles gs@(GameState { world = World { projectiles = [] } }) = gs
-updateProjectiles gs@(GameState { world = World { projectiles = ps } }) = gs {
-    world = (world gs) { projectiles = map func ps }
-  }
+updateProjectiles :: GameState -> [Projectile]
+updateProjectiles gs@(GameState { world = World { projectiles = [] } }) = []
+updateProjectiles gs@(GameState { world = World { projectiles = ps } }) =
+  filter notCollided $ map func ps
   where
+    notCollided :: Projectile -> Bool
+    notCollided (Projectile (Pos (Vector2 x' y')) _) = not $ any check (asteroids $ world gs)
+      where
+        check :: Asteroid -> Bool
+        check (Asteroid _ path (Pos (Vector2 x'' y'')) _) = circleCollision (x', y') (x'', y'') [(1,1)] path
     func (Projectile (Pos (Vector2 x' y')) (Rot r)) = Projectile (Pos (Vector2 (x' + xInc * projectileSpeed) (y' + yInc * projectileSpeed))) (Rot r)
+      where
+        Vector2 { x = xInc, y = yInc } = degreeToVector r
+
+updateAsteroids :: GameState -> IO [Asteroid]
+updateAsteroids gs@(GameState { world = World { asteroids = as } }) = do
+  let test = concatMap func as
+  if length as < 2
+    then do
+      newAsteroid <- asteroidPath AsteroidLg
+      rot <- drawInt 0 360
+      return $ Asteroid AsteroidLg newAsteroid (Pos (Vector2 0 0)) (Rot rot) : test
+    else return test
+  where
+    func :: Asteroid -> Asteroid
+    func (Asteroid at path (Pos (Vector2 x' y')) (Rot r)) = Asteroid at path (Pos (Vector2 (x' + xInc) (y' + yInc))) (Rot r)
       where
         Vector2 { x = xInc, y = yInc } = degreeToVector r
 
@@ -98,8 +116,16 @@ obtainPowerUp (Weapon weaponType) player = player { weapon = weaponType }
 
 updateGame :: Float -> GameState -> IO GameState
 updateGame _ gs = do
-  -- traceShow d (return ())
-  let newGs = updateProjectiles gs
+  -- traceShow (translatePath (getPos $ playerOne gs) shipPath) (return ())
+  -- traceShow shipPath (return ())
+  newAs <- updateAsteroids gs
+  let newGs = gs {
+    world = World {
+      asteroids = newAs,
+      projectiles = updateProjectiles gs,
+      powerUps = []
+    }
+  }
 
   let gs1 = (\(p1, ps) -> newGs {
                 playerOne = p1
@@ -131,6 +157,9 @@ updateGame _ gs = do
     keys = disableKeys (keys gs2) [SpecialKey KeyEnter, SpecialKey KeySpace]
   }
 
+getPos :: Player -> Point
+getPos (Player { position = Pos (Vector2 x' y') }) = (x', y')
+
 
 -- View
 renderGame :: GameState -> IO Picture
@@ -139,10 +168,12 @@ renderGame gs = return (
       renderPlayer p1 red,
       if isMp then renderPlayer p2 yellow else blank,
       renderProjectiles,
+      renderAsteroids,
       title,
       renderScore,
       renderHpP1,
-      renderHpP2
+      renderHpP2,
+      lineLoop $ rotatePath 30 shipPath
     ]
   )
   where
@@ -155,6 +186,8 @@ renderGame gs = return (
     renderHpP2 = if isMp then Pictures [translate (windowRight - (25 * fromIntegral hp)) (windowTop - 25) $ scale 0.5 0.5 $ renderSpaceShip yellow | hp <- [1..getHp p2]] else blank
     renderProjectiles = Pictures $ map (\(Projectile (Pos (Vector2 x' y')) _) ->
       translate x' y' $ color white $ circleSolid 2) $ projectiles $ world gs
-    renderPlayer p c = translate x' y' $ rotate (getRotation p) $ renderSpaceShip c
+    renderPlayer p c = translate x' y' $ rotate (fromIntegral $ getRotation p) $ renderSpaceShip c
       where
         Pos (Vector2 x' y') = position p
+    renderAsteroids = Pictures $ map (\(Asteroid _ p (Pos (Vector2 x' y')) _) ->
+      translate x' y' $ renderAsteroid p) $ asteroids $ world gs

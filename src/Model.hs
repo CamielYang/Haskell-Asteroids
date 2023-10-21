@@ -6,9 +6,9 @@ import           Graphics.Gloss.Interface.IO.Game
 data Vector2  = Vector2 {
   x :: Float,
   y :: Float
-}
+} deriving (Show)
 
-newtype Position  = Pos Vector2
+newtype Position  = Pos Vector2 deriving (Show)
 newtype Velocity  = Vel Vector2
 newtype Rotation  = Rot Int
 newtype Health    = HP Int
@@ -19,7 +19,7 @@ data Status       = Paused | Active deriving (Eq)
 data Mode         = Singleplayer | Multiplayer deriving (Eq, Show)
 
 data AsteroidType = AsteroidLg | AsteroidMd | AsteroidSm deriving (Eq, Ord)
-data Asteroid     = Asteroid AsteroidType Picture Position Velocity
+data Asteroid     = Asteroid AsteroidType [Point] Position Rotation
 data Projectile   = Projectile Position Rotation
 
 data WeaponType   = Default | Shotgun | Rifle

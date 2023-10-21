@@ -1,11 +1,11 @@
 module Screens.Menu (menuKeys, renderMenu) where
 import           Graphics.Gloss.Interface.IO.Game
 import           Model
-import           ViewLib
+import           Utils.ViewLib
 
 -- Controller
 menuKeys :: Event -> GameState -> GameState
-menuKeys (EventKey (Char 'a') Down _ _) _ = initialState { screen = InGame, mode = Singleplayer }
+menuKeys (EventKey (Char 'a') Down _ _) gs = initialState { screen = InGame, mode = Singleplayer, world = World { asteroids = asteroids $ world gs, projectiles = [] } }
 menuKeys (EventKey (Char 'd') Down _ _) _ = initialState { screen = InGame, mode = Multiplayer }
 menuKeys _ gameState = gameState
 
@@ -17,7 +17,7 @@ renderMenu gs = do
       title,
       sp,
       mp,
-      renderAsteroids
+      renderSpaceShip'
     ]
 
   where
@@ -33,5 +33,4 @@ renderMenu gs = do
           translate 50 0 $ renderSpaceShip yellow
         ]
       ]
-    renderAsteroids = Pictures $ map (\(Asteroid _ p (Pos (Vector2 x' y')) _) ->
-      translate x' y' $ p) $ asteroids $ world gs
+
