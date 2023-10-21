@@ -19,7 +19,7 @@ data Status       = Paused | Active deriving (Eq)
 data Mode         = Singleplayer | Multiplayer deriving (Eq, Show)
 
 data AsteroidType = AsteroidLg | AsteroidMd | AsteroidSm deriving (Eq, Ord)
-data Asteroid     = Asteroid AsteroidType [Point] Position Rotation
+data Asteroid     = Asteroid Path Position Rotation
 data Projectile   = Projectile Position Rotation
 
 data WeaponType   = Default | Shotgun | Rifle

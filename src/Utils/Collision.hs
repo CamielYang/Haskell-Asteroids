@@ -1,4 +1,4 @@
-module Utils.Collision (circleCollision) where
+module Utils.Collision (circleCollision, largestDistance) where
 import           Graphics.Gloss
 
 circleCollision :: Point -> Point -> [Point] -> [Point] -> Bool

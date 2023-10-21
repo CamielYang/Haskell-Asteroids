@@ -20,13 +20,8 @@ centerPath p = map (\(x', y') -> (x' - xInc, y' - yInc)) p
 shipPath :: [Point]
 shipPath = scalePath 5 $ centerPath [(0,0), (1,0),(1,-1), (2,-1), (2,-4), (3,-4), (3,-7), (2,-7), (2,-6), (-1,-6), (-1,-7), (-2,-7), (-2,-4), (-1,-4), (-1,-1), (0,-1), (0,0)]
 
-asteroidPath :: AsteroidType -> IO [Point]
-asteroidPath at = do
+asteroidPath :: IO [Point]
+asteroidPath = do
+  size <- drawFloat 15 40
   asteroidGen <- randomizeCoords [(0,0), (1,0),(2,-1), (2,-2), (1,-3), (0,-3), (-1,-2), (-1,-1)]
-  return $ sc $ centerPath asteroidGen
-  where
-    sc
-      | at == AsteroidSm = scalePath 15
-      | at == AsteroidMd = scalePath 25
-      | otherwise = scalePath 40
-
+  return $ scalePath size $ centerPath asteroidGen
