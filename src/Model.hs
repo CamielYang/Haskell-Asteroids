@@ -1,12 +1,21 @@
+{-# LANGUAGE InstanceSigs #-}
 module Model where
 
 import qualified Data.Set                         as S
 import           Graphics.Gloss.Interface.IO.Game
 
-data Vector2  = Vector2 {
+data Vector2  = Vec2 {
   x :: Float,
   y :: Float
 } deriving (Show)
+
+instance Num Vector2 where
+  (+) (Vec2 x1 y1) (Vec2 x2 y2) = Vec2 (x1 + x2) (y1 + y2)
+  (-) (Vec2 x1 y1) (Vec2 x2 y2) = Vec2 (x1 - x2) (y1 - y2)
+  (*) (Vec2 x1 y1) (Vec2 x2 y2) = Vec2 (x1 * x2) (y1 * y2)
+  abs (Vec2 x' y')              = Vec2 (abs x') (abs y')
+  signum (Vec2 x' y')           = Vec2 (signum x') (signum y')
+  fromInteger i                 = Vec2 (fromInteger i) (fromInteger i)
 
 newtype Position  = Pos Vector2 deriving (Show)
 newtype Velocity  = Vel Vector2
@@ -58,8 +67,8 @@ initialPlayer :: Player
 initialPlayer = Player {
   health   = HP 3,
   rotation = Rot 0,
-  position = Pos Vector2 { x = 0, y = 0 },
-  velocity = Vel Vector2 { x = 0, y = 0 },
+  position = Pos Vec2 { x = 0, y = 0 },
+  velocity = Vel Vec2 { x = 0, y = 0 },
   weapon   = Default,
   cooldown = 0
 }
@@ -77,7 +86,7 @@ initialState = GameState {
   screen    = Menu,
   mode      = Singleplayer,
   playerOne = initialPlayer,
-  playerTwo = initialPlayer { position = Pos Vector2 { x = 50, y = 0 }},
+  playerTwo = initialPlayer { position = Pos Vec2 { x = 50, y = 0 }},
   score     = Score 0,
   status    = Active,
   keys      = S.empty

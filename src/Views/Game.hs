@@ -4,15 +4,15 @@ import           Model
 import           Utils.Render
 
 renderProjectiles :: [Projectile] -> Picture
-renderProjectiles = Pictures . map (\(Projectile (Pos (Vector2 x' y')) _) ->
+renderProjectiles = Pictures . map (\(Projectile (Pos (Vec2 x' y')) _) ->
   translate x' y' $ color white $ circleSolid 2)
 
 renderAsteroids :: [Asteroid] -> Picture
-renderAsteroids = Pictures . map (\(Asteroid p (Pos (Vector2 x' y')) _) ->
+renderAsteroids = Pictures . map (\(Asteroid p (Pos (Vec2 x' y')) _) ->
   translate x' y' $ renderAsteroid p)
 
 renderPlayer :: Player -> Color -> Picture
-renderPlayer (Player { position = Pos (Vector2 x' y'), rotation = Rot r }) c =
+renderPlayer (Player { position = Pos (Vec2 x' y'), rotation = Rot r }) c =
   translate x' y'
   $ rotate (fromIntegral r)
   $ color c
