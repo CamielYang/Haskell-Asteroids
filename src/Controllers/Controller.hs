@@ -9,14 +9,14 @@ import           Controllers.Menu
 update :: Float -> GameState -> IO GameState
 update d gs
   | currentScreen == InGame = updateGame d gs
-  | otherwise = return gs
+  | otherwise               = return gs
   where
     currentScreen = screen gs
 
 handleKeys :: Event -> GameState -> IO GameState
-handleKeys e gameState
-  | currentScreen == Menu = return (menuKeys e gameState)
-  | currentScreen == InGame = return (gameKeys e gameState)
-  | otherwise = return gameState
+handleKeys e gs
+  | currentScreen == Menu   = return (menuKeys e gs)
+  | currentScreen == InGame = return (gameKeys e gs)
+  | otherwise               = return gs
   where
-    currentScreen = screen gameState
+    currentScreen = screen gs

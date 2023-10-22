@@ -22,8 +22,8 @@ frames = 30
 
 render :: GameState -> IO Picture
 render gs
-  | currentScreen == Menu = renderMenu gs
+  | currentScreen == Menu   = renderMenu gs
   | currentScreen == InGame = renderGame gs
-  | otherwise = renderMenu gs
+  | otherwise               = renderMenu gs
   where
     currentScreen = screen gs
