@@ -33,7 +33,8 @@ data Player       = Player {
   rotation :: Rotation,
   position :: Position,
   velocity :: Velocity,
-  weapon   :: WeaponType
+  weapon   :: WeaponType,
+  cooldown :: Float
 }
 
 data World = World {
@@ -59,7 +60,8 @@ initialPlayer = Player {
   rotation = Rot 0,
   position = Pos Vector2 { x = 0, y = 0 },
   velocity = Vel Vector2 { x = 0, y = 0 },
-  weapon   = Default
+  weapon   = Default,
+  cooldown = 0
 }
 
 initialWorld :: World
@@ -95,3 +97,21 @@ getHp (Player { health = HP hp }) = hp
 
 addScore :: Score -> Score
 addScore (Score s) = Score (s + 1)
+
+getCooldown :: Player -> Float
+getCooldown (Player { cooldown = c }) = c
+
+determinePlayerColor :: Player -> Color -> Color
+determinePlayerColor (Player { cooldown = cd }) c
+  | cd <= 0    = c
+  | otherwise  = withAlpha 0.5 c
+
+getProjectiles :: GameState -> [Projectile]
+getProjectiles gs = projectiles $ world gs
+
+getAsteroids :: GameState -> [Asteroid]
+getAsteroids gs = asteroids $ world gs
+
+getPowerUps :: GameState -> [PowerUp]
+getPowerUps gs = powerUps $ world gs
+

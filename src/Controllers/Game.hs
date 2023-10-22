@@ -30,8 +30,8 @@ updateVelocity p@(Player { velocity = Vel (Vector2 x' y') }) v = if lengthOfVect
     Vector2 xInc yInc = degreeToVector d
     newV2 = Vector2 ((x' + xInc * v) * drag) ((y' + yInc * v) * drag)
 
-updatePlayer :: GameState -> Player -> Key -> Key -> Key -> Key -> Key -> (Player, [Projectile])
-updatePlayer gs p@(Player { rotation = Rot rot }) u d l r s = do
+updatePlayer :: Float -> GameState -> Player -> Key -> Key -> Key -> Key -> Key -> (Player, [Projectile])
+updatePlayer delta gs p@(Player { rotation = Rot rot }) u d l r s = do
   (p {
       rotation = if S.member l (keys gs)
                   then updateRotation p (-rotationSpeed)
@@ -44,6 +44,15 @@ updatePlayer gs p@(Player { rotation = Rot rot }) u d l r s = do
                   else if S.member d (keys gs)
                     then updateVelocity p (-force / 2)
                     else Vel Vector2 { x = vx * drag, y = vy * drag }
+    , health  = if collided && getCooldown p <= 0
+                  then HP (getHp p - 1)
+                  else health p
+    , cooldown = if collided && getCooldown p <= 0
+                  then 3
+                  else
+                    if getCooldown p > 0
+                      then getCooldown p - delta
+                      else 0
     },
     if S.member s (keys gs)
         then
@@ -51,6 +60,9 @@ updatePlayer gs p@(Player { rotation = Rot rot }) u d l r s = do
         else
           ps)
     where
+      collided = any check (asteroids $ world gs)
+      check :: Asteroid -> Bool
+      check (Asteroid path (Pos (Vector2 x'' y'')) _) = circleCollision (x'', y'') (xNew, yNew) shipPath path
       Vector2 xInc yInc = degreeToVector rot
       v@(Vel (Vector2 vx vy)) = velocity p
       ps = projectiles (world gs)
@@ -129,15 +141,14 @@ updateWorld gs = do
 -- obtainPowerUp (Weapon weaponType) player = player { weapon = weaponType }
 
 updateGame :: Float -> GameState -> IO GameState
-updateGame _ gs = do
-  -- traceShow (translatePath (getPos $ playerOne gs) shipPath) (return ())
-  -- traceShow shipPath (return ())
+updateGame d gs = do
   newGs <- updateWorld gs
   let gs1 = (\(p1, ps) -> newGs {
 
                 playerOne = p1
               , world = (world newGs) { projectiles = ps }
             }) (updatePlayer
+                  d
                   newGs
                   (playerOne newGs)
                   (Char 'w')
@@ -151,6 +162,7 @@ updateGame _ gs = do
                   playerTwo = p
                 , world = (world gs1) { projectiles = ps }
               }) (updatePlayer
+                    d
                     gs1
                     (playerTwo gs1)
                     (SpecialKey KeyUp)

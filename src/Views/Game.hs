@@ -3,43 +3,53 @@ import           Graphics.Gloss
 import           Model
 import           Utils.Render
 
+renderProjectiles :: [Projectile] -> Picture
+renderProjectiles = Pictures . map (\(Projectile (Pos (Vector2 x' y')) _) ->
+  translate x' y' $ color white $ circleSolid 2)
+
+renderAsteroids :: [Asteroid] -> Picture
+renderAsteroids = Pictures . map (\(Asteroid p (Pos (Vector2 x' y')) _) ->
+  translate x' y' $ renderAsteroid p)
+
+renderPlayer :: Player -> Color -> Picture
+renderPlayer (Player { position = Pos (Vector2 x' y'), rotation = Rot r }) c =
+  translate x' y'
+  $ rotate (fromIntegral r)
+  $ color c
+  $ renderSpaceShip c
+
+renderHp :: (Float -> Float) -> Player -> Color -> Picture
+renderHp f p c = Pictures [
+    translate (f (fromIntegral hp)) (windowTop - 25)
+    $ hpPicture c
+    | hp <- [1..getHp p]
+  ]
+  where
+    hpPicture c = scale 0.5 0.5 $ renderSpaceShip c
+
 renderGame :: GameState -> IO Picture
 renderGame gs = return (
   Pictures [
-      renderPlayer p1 red,
-      if isMp then renderPlayer p2 yellow else blank,
-      renderProjectiles,
-      renderAsteroids,
+      -- Players
+      renderPlayer p1 (determinePlayerColor p1 red),
+      isMp $ renderPlayer p2 (determinePlayerColor p2 yellow),
+
+      -- World
+      renderProjectiles $ getProjectiles gs,
+      renderAsteroids $ getAsteroids gs,
+
+      -- UI
       title,
       renderScore,
-      renderHpP1,
-      renderHpP2
+      renderHp (\x -> windowLeft + 25 * x) p1 red,
+      isMp $ renderHp (\x -> windowRight - 25 * x) p2 yellow
     ]
   )
   where
     title = renderText (show $ mode gs) (-75) (windowTop - 40) 0.2 0.2
-    isMp = mode gs == Multiplayer
+    renderScore = renderText (show $ score gs) (-50) (windowBottom + 25) 0.2 0.2
     p1 = playerOne gs
     p2 = playerTwo gs
-    renderScore = renderText (show $ score gs) (-50) (windowBottom + 25) 0.2 0.2
-    renderHp c = scale 0.5 0.5 $ renderSpaceShip c
-    renderHpP1 = Pictures [
-        translate (windowLeft + (25 * fromIntegral hp)) (windowTop - 25)
-        $ renderHp red
-        | hp <- [1..getHp p1]
-      ]
-    renderHpP2 = if isMp
-      then Pictures [
-        translate (windowRight - (25 * fromIntegral hp)) (windowTop - 25)
-        $ renderHp yellow
-        | hp <- [1..getHp p2]
-      ]
-      else blank
-    renderPlayer p c = translate x' y'
-      $ rotate (fromIntegral $ getRotation p) $ renderSpaceShip c
-      where
-        Pos (Vector2 x' y') = position p
-    renderProjectiles = Pictures $ map (\(Projectile (Pos (Vector2 x' y')) _) ->
-      translate x' y' $ color white $ circleSolid 2) $ projectiles $ world gs
-    renderAsteroids = Pictures $ map (\(Asteroid p (Pos (Vector2 x' y')) _) ->
-      translate x' y' $ renderAsteroid p) $ asteroids $ world gs
+    isMp p
+      | mode gs == Multiplayer = p
+      | otherwise              = blank
