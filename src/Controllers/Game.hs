@@ -1,7 +1,8 @@
 module Controllers.Game (updateGame, gameKeys) where
-import qualified Data.Set                         as S
-import           Graphics.Gloss.Interface.IO.Game
+import qualified Data.Set                           as S
+import           Graphics.Gloss.Interface.Pure.Game
 import           Model
+import           System.Random                      (StdGen)
 import           Utils.Collision
 import           Utils.Keys
 import           Utils.Lib
@@ -90,56 +91,53 @@ updateProjectiles gs@(GameState { world = World { projectiles = ps } }) =
       where
         dirVec = degreeToVector r * Vec2 projectileSpeed projectileSpeed
 
-randomAsteroid :: IO Asteroid
-randomAsteroid = do
-  path <- asteroidPath
-  rot <- randomInt 0 360
-  x' <- randomFloat windowLeft windowRight
-  y' <- randomFloat windowBottom windowTop
-  return $ Asteroid path (Pos (Vec2 x' y')) (Rot rot)
-
-splitAsteroid :: Asteroid -> IO Asteroid
-splitAsteroid (Asteroid _ (Pos posVec') _) = do
-  dX <- randomFloat 0 10
-  dY <- randomFloat 0 10
-  dR <- randomInt 0 360
-  path' <- asteroidPath
-  return $ Asteroid (scalePath 0.5 path') (Pos (posVec' + Vec2 dX dY)) (Rot dR)
-
-updateAsteroids :: GameState -> IO [Asteroid]
-updateAsteroids (GameState { world = World { asteroids = as, projectiles = ps } }) = do
-  mapped <- mapM func as
-  let newAs = concat mapped
-
-  if length as < 10 then do
-    newAsteroid <- randomAsteroid
-    return $ newAsteroid : newAs
-  else return newAs
+randomAsteroid :: StdGen -> (Asteroid, StdGen)
+randomAsteroid gen = (Asteroid path (Pos (Vec2 x' y')) (Rot rot), gen4)
   where
-    func :: Asteroid -> IO [Asteroid]
-    func asteroid@(Asteroid path (Pos posVec) (Rot r))
-      | collided && ld >= 30 = do
-          a1 <- splitAsteroid asteroid
-          a2 <- splitAsteroid asteroid
-          return [a1,a2]
-      | collided && ld < 30 = return []
-      | otherwise = return [Asteroid path (Pos (posVec + degreeToVector r)) (Rot r)]
+    (path, gen1) = asteroidPath gen
+    (rot, gen2) = randomInt 0 360 gen1
+    (x', gen3) = randomFloat windowLeft windowRight gen2
+    (y', gen4) = randomFloat windowBottom windowTop gen3
+
+splitAsteroid :: Asteroid -> StdGen -> (Asteroid, StdGen)
+splitAsteroid (Asteroid _ (Pos posVec') _) gen = (Asteroid (scalePath 0.5 path') (Pos (posVec' + Vec2 dX dY)) (Rot dR), gen4)
+  where
+    (dX, gen1) = randomFloat 0 10 gen
+    (dY, gen2) = randomFloat 0 10 gen1
+    (dR, gen3) = randomInt 0 360 gen2
+    (path', gen4) = asteroidPath gen3
+
+updateAsteroids :: GameState -> StdGen -> ([Asteroid], StdGen)
+updateAsteroids (GameState { world = World { asteroids = as, projectiles = ps } }) gen
+  | length as < 10 = (newAsteroid : newAs, gen2)
+  | otherwise = (newAs, gen2)
+  where
+    (mapped, gen1) = mapRandom func as gen
+    newAs = concat mapped
+    (newAsteroid, gen2) = randomAsteroid gen1
+    func :: Asteroid -> StdGen -> ([Asteroid], StdGen)
+    func asteroid@(Asteroid path (Pos posVec) (Rot r)) gen'
+      | collided && ld >= 30 = ([a1,a2], gen2')
+      | collided && ld < 30 = ([], gen')
+      | otherwise = ([Asteroid path (Pos (posVec + degreeToVector r)) (Rot r)], gen')
       where
+        (a1, gen1') = splitAsteroid asteroid gen
+        (a2, gen2') = splitAsteroid asteroid gen1'
         ld = largestDistance path
         collided = any check ps
         check (Projectile (Pos pVec) _) = circleCollision (v2ToTuple pVec) (x posVec, y posVec) [(1,1)] path
 
-updateWorld :: GameState -> IO GameState
-updateWorld gs = do
-  newAs <- updateAsteroids gs
-  let newGs = updateProjectiles gs
-
-  return newGs {
+updateWorld :: GameState -> GameState
+updateWorld gs = newGs {
     world = (world newGs) {
       asteroids = newAs,
       powerUps = []
-    }
+    },
+    stdGen = newGen
   }
+  where
+    (newAs, newGen) = updateAsteroids gs (stdGen gs)
+    newGs = updateProjectiles gs
 
 -- obtainPowerUp :: PowerUpType -> Player -> Player
 -- obtainPowerUp (Heart n) player = player { health = HP (n + getHealth (health player)) }
@@ -148,11 +146,13 @@ updateWorld gs = do
 --     getHealth (HP v) = v
 -- obtainPowerUp (Weapon weaponType) player = player { weapon = weaponType }
 
-updateGame :: Float -> GameState -> IO GameState
-updateGame d gs = do
-  newGs <- updateWorld gs
-
-  let gs1 = updatePlayer
+updateGame :: Float -> GameState -> GameState
+updateGame d gs = gs2 {
+    keys = disableKeys (keys gs2) [SpecialKey KeyEnter, SpecialKey KeySpace]
+  }
+  where
+    newGs = updateWorld gs
+    gs1 = updatePlayer
             (\p -> newGs { playerOne = p })
             d
             newGs
@@ -162,24 +162,19 @@ updateGame d gs = do
             (Char 'a')
             (Char 'd')
             (SpecialKey KeySpace)
-
-  let gs2 = if mode gs == Multiplayer
-            then
-            updatePlayer
-              (\p -> gs1 { playerTwo = p })
-              d
-              gs1
-              (playerTwo gs1)
-              (SpecialKey KeyUp)
-              (SpecialKey KeyDown)
-              (SpecialKey KeyLeft)
-              (SpecialKey KeyRight)
-              (SpecialKey KeyEnter)
-             else gs1
-
-  return gs2 {
-    keys = disableKeys (keys gs2) [SpecialKey KeyEnter, SpecialKey KeySpace]
-  }
+    gs2 = if mode gs == Multiplayer
+          then
+          updatePlayer
+            (\p -> gs1 { playerTwo = p })
+            d
+            gs1
+            (playerTwo gs1)
+            (SpecialKey KeyUp)
+            (SpecialKey KeyDown)
+            (SpecialKey KeyLeft)
+            (SpecialKey KeyRight)
+            (SpecialKey KeyEnter)
+          else gs1
 
 gameKeys :: Event -> GameState -> GameState
 gameKeys (EventKey (SpecialKey KeyEsc) Down _ _) gameState =

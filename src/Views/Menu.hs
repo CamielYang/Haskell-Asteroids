@@ -3,9 +3,8 @@ import           Graphics.Gloss
 import           Model
 import           Utils.Render
 
-renderMenu :: GameState -> IO Picture
-renderMenu _ = do
-  return $ Pictures [title, sp, mp]
+renderMenu :: GameState -> Picture
+renderMenu _ = Pictures [title, sp, mp]
   where
     title = renderText "Asteroids" (-125) 100 0.5 0.5
     sp = Pictures [

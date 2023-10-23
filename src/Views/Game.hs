@@ -27,9 +27,8 @@ renderHp f p c = Pictures [
   where
     hpPicture c = scale 0.5 0.5 $ renderSpaceShip c
 
-renderGame :: GameState -> IO Picture
-renderGame gs = return (
-  Pictures [
+renderGame :: GameState -> Picture
+renderGame gs = Pictures [
       -- Players
       renderPlayer p1 (determinePlayerColor p1 red),
       isMp $ renderPlayer p2 (determinePlayerColor p2 yellow),
@@ -44,7 +43,6 @@ renderGame gs = return (
       renderHp (\x -> windowLeft + 25 * x) p1 red,
       isMp $ renderHp (\x -> windowRight - 25 * x) p2 yellow
     ]
-  )
   where
     title = renderText (show $ mode gs) (-75) (windowTop - 40) 0.2 0.2
     renderScore = renderText (show $ score gs) (-50) (windowBottom + 25) 0.2 0.2

@@ -1,6 +1,6 @@
 module Utils.Keys where
-import qualified Data.Set                         as S
-import           Graphics.Gloss.Interface.IO.Game
+import qualified Data.Set                           as S
+import           Graphics.Gloss.Interface.Pure.Game
 
 disableKeys :: S.Set Key -> [Key] -> S.Set Key
 disableKeys s [] = s

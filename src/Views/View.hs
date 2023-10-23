@@ -20,7 +20,7 @@ background = makeColorI 36 28 65 255
 frames :: Int
 frames = 30
 
-render :: GameState -> IO Picture
+render :: GameState -> Picture
 render gs
   | currentScreen == Menu   = renderMenu gs
   | currentScreen == InGame = renderGame gs
