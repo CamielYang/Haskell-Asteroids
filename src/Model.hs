@@ -1,8 +1,17 @@
-{-# LANGUAGE InstanceSigs #-}
 module Model where
 
 import qualified Data.Set                         as S
 import           Graphics.Gloss.Interface.IO.Game
+import           System.Random
+
+force, drag, maxVelocity, projectileSpeed, shootDistance :: Float
+rotationSpeed :: Int
+force           = 0.3
+drag            = 0.98
+maxVelocity     = 10
+projectileSpeed = 10
+rotationSpeed   = 10
+shootDistance   = 25
 
 data Vector2  = Vec2 {
   x :: Float,
@@ -36,7 +45,6 @@ data WeaponType   = Default | Shotgun | Rifle
 data PowerUpType  = Heart Int | Weapon WeaponType
 data PowerUp      = PowerUp PowerUpType Position
 
-
 data Player       = Player {
   health   :: Health,
   rotation :: Rotation,
@@ -60,7 +68,8 @@ data GameState = GameState {
   playerTwo :: Player,
   score     :: Score,
   status    :: Status,
-  keys      :: S.Set Key
+  keys      :: S.Set Key,
+  stdGen    :: StdGen
 }
 
 initialPlayer :: Player
@@ -89,17 +98,12 @@ initialState = GameState {
   playerTwo = initialPlayer { position = Pos Vec2 { x = 50, y = 0 }},
   score     = Score 0,
   status    = Active,
-  keys      = S.empty
+  keys      = S.empty,
+  stdGen    = mkStdGen 100
 }
 
 getRotation :: Player -> Int
 getRotation (Player { rotation = Rot r }) = r
-
-updateRotation :: Player -> Int -> Rotation
-updateRotation (Player { rotation = Rot r }) d
-  | r + d > 360 = Rot (r + d - 360)
-  | r + d < 0   = Rot (r + d + 360)
-  | otherwise   = Rot (r + d)
 
 getHp :: Player -> Int
 getHp (Player { health = HP hp }) = hp

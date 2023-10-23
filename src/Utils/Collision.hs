@@ -1,5 +1,7 @@
-module Utils.Collision (circleCollision, largestDistance) where
+module Utils.Collision (circleCollision, shipCollided, largestDistance) where
 import           Graphics.Gloss
+import           Model
+import           Utils.PathModels
 
 circleCollision :: Point -> Point -> Path -> Path -> Bool
 circleCollision (x1, y1) (x2, y2) p1 p2 = sqrt (x * x + y * y) < r1 + r2
@@ -8,6 +10,13 @@ circleCollision (x1, y1) (x2, y2) p1 p2 = sqrt (x * x + y * y) < r1 + r2
     y = y1 - y2
     r1 = largestDistance p1
     r2 = largestDistance p2
+
+shipCollided :: Player -> GameState -> Bool
+shipCollided p gs = any check (asteroids $ world gs) && getCooldown p <= 0
+  where
+    check :: Asteroid -> Bool
+    check (Asteroid path (Pos (Vec2 x'' y'')) _) = circleCollision (x'', y'') (x', y') shipPath path
+    Pos (Vec2 x' y') = position p
 
 largestDistance :: Path -> Float
 largestDistance [] = 0
@@ -18,3 +27,5 @@ largestDistance p = maximum [minX, minY, maxX, maxY]
     minY = abs $ minimum $ map snd p
     maxX = abs $ maximum $ map fst p
     maxY = abs $ maximum $ map snd p
+
+

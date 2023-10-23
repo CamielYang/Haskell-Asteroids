@@ -10,63 +10,67 @@ import           Utils.Point
 import           Utils.Random
 import           Utils.Render
 
-force, drag, maxVelocity, projectileSpeed, shootDistance :: Float
-rotationSpeed :: Int
-force           = 0.3
-drag            = 0.98
-maxVelocity     = 10
-projectileSpeed = 10
-rotationSpeed   = 10
-shootDistance   = 25
-
 updatePosition :: Player -> Position
 updatePosition (Player { position = Pos pVec, velocity = Vel vVec }) = Pos (pVec + vVec)
 
-updateVelocity :: Player -> Float -> Velocity
-updateVelocity p@(Player { velocity = Vel vVec }) v = if lengthOfVector newV2 > maxVelocity
-  then velocity p
-  else Vel newV2
-  where
-    Rot d = rotation p
-    dirVec = degreeToVector d * Vec2 v v
-    dragVec = Vec2 drag drag
-    newV2 = (vVec + dirVec) * dragVec
+updateRotation :: Player -> GameState -> Key -> Key -> Rotation
+updateRotation p gs l r
+  | S.member l (keys gs) = setRotation p (-rotationSpeed)
+  | S.member r (keys gs) = setRotation p rotationSpeed
+  | otherwise            = rotation p
 
-shipCollided :: Player -> GameState -> Bool
-shipCollided p gs = any check (asteroids $ world gs) && getCooldown p <= 0
-  where
-    check :: Asteroid -> Bool
-    check (Asteroid path (Pos (Vec2 x'' y'')) _) = circleCollision (x'', y'') (x', y') shipPath path
-    Pos (Vec2 x' y') = position p
+updateVelocity :: Player -> GameState -> Key -> Key -> Velocity
+updateVelocity p gs u d
+  | S.member u (keys gs) = setVelocity p force
+  | S.member d (keys gs) = setVelocity p (-force / 2)
+  | otherwise            = setVelocity p 0
 
-updatePlayer :: Float -> GameState -> Player -> Key -> Key -> Key -> Key -> Key -> (Player, [Projectile])
-updatePlayer delta gs p@(Player { rotation = Rot rot }) u d l r s = do
-  (p {
-      position = newPos
-    , rotation = let r' | S.member l (keys gs) = updateRotation p (-rotationSpeed)
-                        | S.member r (keys gs) = updateRotation p rotationSpeed
-                        | otherwise            = rotation p
-                 in r'
-    , velocity = let v' | S.member u (keys gs) = updateVelocity p force
-                        | S.member d (keys gs) = updateVelocity p (-force / 2)
-                        | otherwise            = Vel (velVec * Vec2 drag drag)
-                 in v'
-    , health   = let h' | getHp p <= 0         = HP 0
-                        | otherwise            = health p
-                 in h'
-    , cooldown = let c' | shipCollided p gs    = 3
-                        | getCooldown p > 0    = getCooldown p - delta
-                        | otherwise            = 0
-                 in c'
-    },
-    let ps' | S.member s (keys gs) = Projectile (Pos (newPosVec + dirVec)) (Rot rot) : ps
-            | otherwise            = projectiles (world gs)
-    in ps')
+updateHealth :: Player -> GameState -> Health
+updateHealth p gs
+  | shipCollided p gs && getCooldown p <= 0 = HP (getHp p - 1)
+  | getHp p <= 0                            = HP 0
+  | otherwise                               = health p
+
+updateCooldown :: Player -> Float -> GameState -> Float
+updateCooldown p delta gs
+  | shipCollided p gs = 3
+  | getCooldown p > 0 = getCooldown p - delta
+  | otherwise         = 0
+
+handleShoot :: Player -> GameState -> Key -> [Projectile]
+handleShoot p gs s
+  | S.member s (keys gs) = Projectile (Pos (newPosVec + dirVec)) r : ps
+  | otherwise            = ps
   where
-    Vel velVec             = velocity p
-    ps                     = projectiles (world gs)
-    newPos@(Pos newPosVec) = updatePosition p
-    dirVec                 = degreeToVector rot * Vec2 shootDistance shootDistance
+    ps            = projectiles (world gs)
+    Pos newPosVec = updatePosition p
+    dirVec        = degreeToVector rot * Vec2 shootDistance shootDistance
+    r@(Rot rot)   = rotation p
+
+updatePlayer :: (Player -> GameState)
+              -> Float
+              -> GameState
+              -> Player
+              -> Key
+              -> Key
+              -> Key
+              -> Key
+              -> Key
+              -> GameState
+updatePlayer f dt gs p u d l r s = do
+  (f newPlayer) {
+    world = (world gs) {
+      projectiles = handleShoot p gs s
+    }
+  }
+  where
+    newPlayer = p {
+      position = updatePosition p
+    , rotation = updateRotation p gs l r
+    , velocity = updateVelocity p gs u d
+    , health   = updateHealth p gs
+    , cooldown = updateCooldown p dt gs
+    }
 
 updateProjectiles :: GameState -> GameState
 updateProjectiles gs@(GameState { world = World { projectiles = [] } }) = gs
@@ -147,34 +151,31 @@ updateWorld gs = do
 updateGame :: Float -> GameState -> IO GameState
 updateGame d gs = do
   newGs <- updateWorld gs
-  let gs1 = (\(p1, ps) -> newGs {
 
-                playerOne = p1
-              , world = (world newGs) { projectiles = ps }
-            }) (updatePlayer
-                  d
-                  newGs
-                  (playerOne newGs)
-                  (Char 'w')
-                  (Char 's')
-                  (Char 'a')
-                  (Char 'd')
-                  (SpecialKey KeySpace))
+  let gs1 = updatePlayer
+            (\p -> newGs { playerOne = p })
+            d
+            newGs
+            (playerOne newGs)
+            (Char 'w')
+            (Char 's')
+            (Char 'a')
+            (Char 'd')
+            (SpecialKey KeySpace)
 
   let gs2 = if mode gs == Multiplayer
-              then (\(p, ps) -> gs1 {
-                  playerTwo = p
-                , world = (world gs1) { projectiles = ps }
-              }) (updatePlayer
-                    d
-                    gs1
-                    (playerTwo gs1)
-                    (SpecialKey KeyUp)
-                    (SpecialKey KeyDown)
-                    (SpecialKey KeyLeft)
-                    (SpecialKey KeyRight)
-                    (SpecialKey KeyEnter))
-              else gs1
+            then
+            updatePlayer
+              (\p -> gs1 { playerTwo = p })
+              d
+              gs1
+              (playerTwo gs1)
+              (SpecialKey KeyUp)
+              (SpecialKey KeyDown)
+              (SpecialKey KeyLeft)
+              (SpecialKey KeyRight)
+              (SpecialKey KeyEnter)
+             else gs1
 
   return gs2 {
     keys = disableKeys (keys gs2) [SpecialKey KeyEnter, SpecialKey KeySpace]
