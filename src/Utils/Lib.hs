@@ -30,8 +30,8 @@ setVelocity p@(Player { velocity = Vel vVec }) v = if lengthOfVector newV2 > max
   then velocity p
   else Vel newV2
   where
-    Rot d = rotation p
-    dirVec = degreeToVector d * Vec2 v v
+    Rot d   = rotation p
+    dirVec  = degreeToVector d * Vec2 v v
     dragVec = Vec2 drag drag
-    newV2 = (vVec + dirVec) * dragVec
+    newV2   = (vVec + dirVec) * dragVec
 

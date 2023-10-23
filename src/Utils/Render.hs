@@ -4,13 +4,13 @@ import           Utils.PathModels
 import           Utils.Point
 
 width, height :: Int
-width = 800
-height = 600
+width = 1500
+height = 750
 
 windowLeft, windowRight, windowTop, windowBottom :: Float
-windowLeft = fromIntegral (-width) / 2
-windowRight = fromIntegral width / 2
-windowTop = fromIntegral height / 2
+windowLeft   = fromIntegral (-width) / 2
+windowRight  = fromIntegral width / 2
+windowTop    = fromIntegral height / 2
 windowBottom = fromIntegral (-height) / 2
 
 renderText :: String -> Float -> Float -> Float -> Float -> Picture

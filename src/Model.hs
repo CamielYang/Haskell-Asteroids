@@ -4,14 +4,20 @@ import qualified Data.Set                         as S
 import           Graphics.Gloss.Interface.IO.Game
 import           System.Random
 
-force, drag, maxVelocity, projectileSpeed, shootDistance :: Float
+force,
+  drag,
+  maxVelocity,
+  projectileSpeed,
+  shootDistance,
+  projectileLifeTime :: Float
 rotationSpeed :: Int
-force           = 0.3
-drag            = 0.98
-maxVelocity     = 10
-projectileSpeed = 10
-rotationSpeed   = 10
-shootDistance   = 25
+force              = 0.3
+drag               = 0.98
+maxVelocity        = 10
+projectileSpeed    = 10
+rotationSpeed      = 10
+shootDistance      = 25
+projectileLifeTime = 2
 
 data Vector2  = Vec2 {
   x :: Float,
@@ -30,6 +36,7 @@ newtype Position  = Pos Vector2 deriving (Show)
 newtype Velocity  = Vel Vector2
 newtype Rotation  = Rot Int
 newtype Health    = HP Int
+newtype Timer     = Time Float
 
 newtype Score     = Score Int deriving (Show)
 
@@ -39,7 +46,7 @@ data Mode         = Singleplayer | Multiplayer deriving (Eq, Show)
 
 data AsteroidType = AsteroidLg | AsteroidMd | AsteroidSm deriving (Eq, Ord)
 data Asteroid     = Asteroid Path Position Rotation
-data Projectile   = Projectile Position Rotation
+data Projectile   = Projectile Position Rotation Timer
 
 data WeaponType   = Default | Shotgun | Rifle
 data PowerUpType  = Heart Int | Weapon WeaponType
@@ -51,7 +58,7 @@ data Player       = Player {
   position :: Position,
   velocity :: Velocity,
   weapon   :: WeaponType,
-  cooldown :: Float
+  cooldown :: Timer
 }
 
 data World = World {
@@ -79,7 +86,7 @@ initialPlayer = Player {
   position = Pos Vec2 { x = 0, y = 0 },
   velocity = Vel Vec2 { x = 0, y = 0 },
   weapon   = Default,
-  cooldown = 0
+  cooldown = Time 0
 }
 
 initialWorld :: World
@@ -112,10 +119,10 @@ addScore :: Score -> Score
 addScore (Score s) = Score (s + 1)
 
 getCooldown :: Player -> Float
-getCooldown (Player { cooldown = c }) = c
+getCooldown (Player { cooldown = Time c }) = c
 
 determinePlayerColor :: Player -> Color -> Color
-determinePlayerColor (Player { cooldown = cd }) c
+determinePlayerColor (Player { cooldown = Time cd }) c
   | cd <= 0    = c
   | otherwise  = withAlpha 0.5 c
 

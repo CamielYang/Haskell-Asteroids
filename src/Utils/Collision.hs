@@ -1,6 +1,7 @@
-module Utils.Collision (circleCollision, shipCollided, largestDistance) where
+module Utils.Collision (circleCollision, shipCollided, projectileCollided, largestDistance) where
 import           Graphics.Gloss
 import           Model
+import           Utils.Lib
 import           Utils.PathModels
 
 circleCollision :: Point -> Point -> Path -> Path -> Bool
@@ -17,6 +18,10 @@ shipCollided p gs = any check (asteroids $ world gs) && getCooldown p <= 0
     check :: Asteroid -> Bool
     check (Asteroid path (Pos (Vec2 x'' y'')) _) = circleCollision (x'', y'') (x', y') shipPath path
     Pos (Vec2 x' y') = position p
+
+projectileCollided :: Projectile -> Asteroid -> Bool
+projectileCollided (Projectile (Pos pVec) _ _) (Asteroid path (Pos aVec) _) =
+  circleCollision (v2ToTuple pVec) (v2ToTuple aVec) [(1,1)] path
 
 largestDistance :: Path -> Float
 largestDistance [] = 0

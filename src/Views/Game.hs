@@ -4,7 +4,7 @@ import           Model
 import           Utils.Render
 
 renderProjectiles :: [Projectile] -> Picture
-renderProjectiles = Pictures . map (\(Projectile (Pos (Vec2 x' y')) _) ->
+renderProjectiles = Pictures . map (\(Projectile (Pos (Vec2 x' y')) _ _) ->
   translate x' y' $ color white $ circleSolid 2)
 
 renderAsteroids :: [Asteroid] -> Picture
