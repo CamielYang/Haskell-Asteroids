@@ -99,12 +99,13 @@ randomAsteroid gen = (Asteroid path (Pos (Vec2 x' y')) (Rot rot), gen4)
     (y', gen4)   = randomFloat windowBottom windowTop gen3
 
 splitAsteroid :: Asteroid -> StdGen -> (Asteroid, StdGen)
-splitAsteroid (Asteroid _ (Pos posVec') _) gen = (Asteroid (scalePath 0.5 path') (Pos (posVec' + Vec2 dX dY)) (Rot dR), gen4)
+splitAsteroid (Asteroid p (Pos posVec') _) gen = (Asteroid path' (Pos (posVec' + Vec2 dX dY)) (Rot dR), gen4)
   where
     (dX, gen1)    = randomFloat 0 10 gen
     (dY, gen2)    = randomFloat 0 10 gen1
     (dR, gen3)    = randomInt 0 360 gen2
-    (path', gen4) = asteroidPath gen3
+    (path', gen4) = asteroidPathScaled size size gen3
+    size          = largestRadius p / 3
 
 updateAsteroids :: GameState -> StdGen -> ([Asteroid], StdGen)
 updateAsteroids (GameState { world = World { asteroids = as, projectiles = ps } }) gen
@@ -122,7 +123,7 @@ updateAsteroids (GameState { world = World { asteroids = as, projectiles = ps } 
       where
         (a1, gen1') = splitAsteroid asteroid gen
         (a2, gen2') = splitAsteroid asteroid gen1'
-        ld          = largestDistance path
+        ld          = largestRadius path
         collided    = any (`projectileCollided` asteroid) ps
 
 updateWorld :: Float -> GameState -> GameState
