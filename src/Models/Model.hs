@@ -1,4 +1,4 @@
-module Model where
+module Models.Model where
 
 import qualified Data.Set                           as S
 import           Graphics.Gloss.Interface.Pure.Game
@@ -9,7 +9,8 @@ force,
   maxVelocity,
   projectileSpeed,
   shootDistance,
-  projectileLifeTime :: Float
+  projectileLifeTime,
+  boundMargin :: Float
 rotationSpeed :: Int
 force              = 0.3
 drag               = 0.98
@@ -18,6 +19,7 @@ projectileSpeed    = 10
 rotationSpeed      = 10
 shootDistance      = 25
 projectileLifeTime = 2
+boundMargin        = 35
 
 data Vector2  = Vec2 {
   x :: Float,
@@ -54,6 +56,8 @@ data Player       = Player {
   health   :: Health,
   rotation :: Rotation,
   position :: Position,
+  pColor   :: Color,
+  path     :: Path,
   velocity :: Velocity,
   weapon   :: WeaponType,
   cooldown :: Timer
@@ -75,64 +79,3 @@ data GameState = GameState {
   keys      :: S.Set Key,
   stdGen    :: StdGen
 }
-
-initialPlayer :: Player
-initialPlayer = Player {
-  health   = HP 3,
-  rotation = Rot 0,
-  position = Pos Vec2 { x = 0, y = 0 },
-  velocity = Vel Vec2 { x = 0, y = 0 },
-  weapon   = Default,
-  cooldown = Time 0
-}
-
-initialWorld :: World
-initialWorld = World {
-  asteroids   = [],
-  projectiles = [],
-  powerUps    = []
-}
-
-initialState :: GameState
-initialState = GameState {
-  world     = initialWorld,
-  screen    = Menu,
-  mode      = Singleplayer,
-  playerOne = initialPlayer,
-  playerTwo = initialPlayer { position = Pos Vec2 { x = 50, y = 0 }},
-  score     = Score 0,
-  keys      = S.empty,
-  stdGen    = mkStdGen 100
-}
-
-newGame :: GameState -> Mode -> GameState
-newGame gs m = initialState { screen = InGame, mode = m, stdGen = stdGen gs }
-
-getRotation :: Player -> Int
-getRotation (Player { rotation = Rot r }) = r
-
-getHp :: Player -> Int
-getHp (Player { health = HP hp }) = hp
-
-addScore :: Score -> Score
-addScore (Score s) = Score (s + 1)
-
-getCooldown :: Player -> Float
-getCooldown (Player { cooldown = Time c }) = c
-
-determinePlayerColor :: Player -> Color -> Color
-determinePlayerColor (Player { cooldown = Time cd }) c
-  | cd <= 0    = c
-  | otherwise  = withAlpha 0.5 c
-
-getProjectiles :: GameState -> [Projectile]
-getProjectiles gs = projectiles $ world gs
-
-getAsteroids :: GameState -> [Asteroid]
-getAsteroids gs = asteroids $ world gs
-
-getPowerUps :: GameState -> [PowerUp]
-getPowerUps gs = powerUps $ world gs
-
-isKilled :: Player -> Bool
-isKilled p = getHp p == 0

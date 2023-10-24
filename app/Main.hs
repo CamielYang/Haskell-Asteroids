@@ -2,7 +2,8 @@ module Main where
 
 import           Controllers.Controller
 import           Graphics.Gloss.Interface.IO.Game
-import           Model
+import           Models.Model
+import           Models.ModelLib
 import           System.Random
 import           Views.View
 

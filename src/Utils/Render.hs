@@ -1,7 +1,6 @@
 module Utils.Render where
 import           Graphics.Gloss
 import           Utils.PathModels
-import           Utils.Point
 
 windowLeft, windowRight, windowTop, windowBottom, width, height :: Float
 width = 1500
@@ -16,9 +15,3 @@ renderText t x' y' s = translate x' y' $ scale s s $ color white $ text t
 
 renderSpaceShip :: Color -> Picture
 renderSpaceShip c = color c $ lineLoop shipPath
-
-renderSpaceShip' :: Picture
-renderSpaceShip' = color white $ lineLoop $ rotatePath 45 shipPath
-
-renderAsteroid :: Path -> Picture
-renderAsteroid p = color white $ lineLoop p

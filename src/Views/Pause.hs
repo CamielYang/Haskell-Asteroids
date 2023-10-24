@@ -1,6 +1,6 @@
 module Views.Pause (renderPause) where
 import           Graphics.Gloss
-import           Model
+import           Models.Model
 import           Utils.Render
 import           Views.Game
 

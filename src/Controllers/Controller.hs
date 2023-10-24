@@ -1,7 +1,7 @@
 module Controllers.Controller (update, handleKeys) where
 
 import           Graphics.Gloss.Interface.Pure.Game
-import           Model
+import           Models.Model
 
 import           Controllers.Game
 import           Controllers.GameOver

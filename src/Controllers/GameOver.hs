@@ -1,6 +1,7 @@
 module Controllers.GameOver (gameOverKeys) where
 import           Graphics.Gloss.Interface.Pure.Game
-import           Model
+import           Models.Model
+import           Models.ModelLib
 
 gameOverKeys :: Event -> GameState -> GameState
 gameOverKeys (EventKey (Char 'r') Down _ _) gs = newGame gs (mode gs)
