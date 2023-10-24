@@ -82,7 +82,7 @@ initialPlayer = Player {
   rotation = Rot 0,
   position = Pos Vec2 { x = 0, y = 0 },
   velocity = Vel Vec2 { x = 0, y = 0 },
-  weapon   = Shotgun,
+  weapon   = Default,
   cooldown = Time 0
 }
 
