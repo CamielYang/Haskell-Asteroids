@@ -52,8 +52,8 @@ updateCooldown p delta gs
   | otherwise         = Time 0
 
 handleShoot :: Player -> GameState -> Key -> [Projectile]
-handleShoot p gs s
-  | S.member s (keys gs) = Projectile (Pos (newPosVec + dirVec)) r (Time projectileLifeTime) : ps
+handleShoot p@(Player _ _ _ _ weaponType _) gs s
+  | weaponType == Default && S.member s (keys gs) = Projectile (Pos (newPosVec + dirVec)) r (Time projectileLifeTime) : ps
   | otherwise            = ps
   where
     ps            = projectiles (world gs)

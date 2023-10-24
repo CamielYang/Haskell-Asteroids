@@ -46,7 +46,7 @@ data Mode         = Singleplayer | Multiplayer deriving (Eq, Show)
 data Asteroid     = Asteroid Path Position Rotation
 data Projectile   = Projectile Position Rotation Timer
 
-data WeaponType   = Default | Shotgun | Rifle
+data WeaponType   = Default | Shotgun | Rifle deriving (Eq)
 data PowerUpType  = Heart Int | Weapon WeaponType
 data PowerUp      = PowerUp PowerUpType Position
 
@@ -82,7 +82,7 @@ initialPlayer = Player {
   rotation = Rot 0,
   position = Pos Vec2 { x = 0, y = 0 },
   velocity = Vel Vec2 { x = 0, y = 0 },
-  weapon   = Default,
+  weapon   = Shotgun,
   cooldown = Time 0
 }
 
