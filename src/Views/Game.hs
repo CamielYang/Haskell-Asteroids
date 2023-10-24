@@ -8,7 +8,7 @@ import           Utils.Render
 renderHp :: (Float -> Float) -> Player -> Picture
 renderHp f p = Pictures [translate (f (fromIntegral hp)) (windowTop - 25) hpPicture | hp <- [1..getHp p]]
   where
-    hpPicture = scale 0.5 0.5 $ renderSpaceShip $ pColor p
+    hpPicture = scale 0.5 0.5 $ getPicture p
 
 renderGame :: GameState -> Picture
 renderGame gs = Pictures [

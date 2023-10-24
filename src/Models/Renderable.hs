@@ -2,29 +2,35 @@ module Models.Renderable where
 import           Graphics.Gloss
 import           Models.Model
 import           Models.ModelLib
-import           Utils.Render    (renderSpaceShip)
+import           Models.Positioned
+import           Utils.Render      (renderSpaceShip)
 
-class Renderable a where
+class (Positioned a) => Renderable a where
+  getPicture :: a -> Picture
+  getColor :: a -> Color
+  getColor _ = white
+  transform :: a -> Picture -> Picture
+  transform a = translate x' y' . rotate (fromIntegral r)
+    where
+      Vec2 x' y' = getPosition a
+      r            = getRotation a
   render :: a -> Picture
+  render a = color (getColor a) $ transform a $ getPicture a
   renderMap :: [a] -> Picture
   renderMap = Pictures . map render
 
 instance Renderable Player where
-  render p@(Player { cooldown = Time cd})
-    | isKilled p = blank
-    | otherwise  = translate x' y'
-                   $ rotate (fromIntegral r)
-                   $ renderSpaceShip c
+  getColor p@(Player { cooldown = Time cd}) = c
     where
-      Pos (Vec2 x' y') = position p
-      Rot r            = rotation p
-      c
-        | cd <= 0    = pColor p
+      c | cd <= 0    = pColor p
         | otherwise  = withAlpha 0.5 $ pColor p
+  getPicture p = renderSpaceShip $ getColor p
+  render p
+    | isKilled p = blank
+    | otherwise  = transform p $ getPicture p
 
 instance Renderable Asteroid where
-  render (Asteroid p (Pos (Vec2 x' y')) _) = translate x' y' $ color white $ lineLoop p
+  getPicture (Asteroid p _ _) = lineLoop p
 
 instance Renderable Projectile where
-  render (Projectile (Pos (Vec2 x' y')) _ _) = translate x' y' $ color white $ circleSolid 2
-
+  getPicture _ = circleSolid 2

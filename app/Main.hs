@@ -14,7 +14,7 @@ main = do
     window
     background
     frames
-    initialState { stdGen = mkStdGen 100 }
+    initialState { stdGen = seed }
     render
     handleKeys
     update
