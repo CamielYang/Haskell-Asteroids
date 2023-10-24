@@ -13,7 +13,7 @@ import           Views.Menu
 import           Views.Pause
 
 window :: Display
-window = InWindow "Asteroids" (width, height) (0, 0)
+window = InWindow "Asteroids" (round width, round height) (0, 0)
 
 background :: Color
 background = makeColorI 36 28 65 255

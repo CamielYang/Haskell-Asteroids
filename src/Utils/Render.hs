@@ -3,15 +3,15 @@ import           Graphics.Gloss
 import           Utils.PathModels
 import           Utils.Point
 
-width, height :: Int
-width = 1500
+width, height :: Float
+width = 1500 
 height = 750
 
 windowLeft, windowRight, windowTop, windowBottom :: Float
-windowLeft   = fromIntegral (-width) / 2
-windowRight  = fromIntegral width / 2
-windowTop    = fromIntegral height / 2
-windowBottom = fromIntegral (-height) / 2
+windowLeft   = (-width) / 2
+windowRight  = width / 2
+windowTop    = height / 2
+windowBottom = (-height) / 2
 
 renderText :: String -> Float -> Float -> Float -> Picture
 renderText t x' y' s = translate x' y' $ scale s s $ color white $ text t
