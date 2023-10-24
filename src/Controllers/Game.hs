@@ -52,14 +52,17 @@ updateCooldown p delta gs
   | otherwise         = Time 0
 
 handleShoot :: Player -> GameState -> Key -> [Projectile]
-handleShoot p gs s
-  | S.member s (keys gs) = Projectile (Pos (newPosVec + dirVec)) r (Time projectileLifeTime) : ps
-  | otherwise            = ps
+handleShoot p@(Player _ r@(Rot rot) _ _ weaponType _) gs s
+  | weaponType == Default && S.member s (keys gs) = Projectile (Pos (newPosVec + dirVec)) r (Time projectileLifeTime) : ps
+  | weaponType == Shotgun && S.member s (keys gs) = weaponShotgun 10: weaponShotgun 0: weaponShotgun (-10): ps 
+  | weaponType == Rifle && S.member s (keys gs) = weaponRifle 1: weaponRifle 2: weaponRifle 3: ps
+  | otherwise  = ps
   where
     ps            = projectiles (world gs)
     Pos newPosVec = updatePosition p
     dirVec        = degreeToVector rot * Vec2 shootDistance shootDistance
-    r@(Rot rot)   = rotation p
+    weaponShotgun deg = Projectile (Pos (newPosVec + dirVec)) (Rot $ rot + deg) (Time projectileLifeTime)
+    weaponRifle deg = Projectile (Pos (newPosVec + (dirVec * deg))) r (Time projectileLifeTime)
 
 updatePlayer :: (Player -> GameState)
               -> Float
