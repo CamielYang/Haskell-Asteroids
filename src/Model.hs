@@ -134,3 +134,5 @@ getAsteroids gs = asteroids $ world gs
 getPowerUps :: GameState -> [PowerUp]
 getPowerUps gs = powerUps $ world gs
 
+isKilled :: Player -> Bool
+isKilled p = getHp p == 0

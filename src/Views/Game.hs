@@ -12,11 +12,12 @@ renderAsteroids = Pictures . map (\(Asteroid p (Pos (Vec2 x' y')) _) ->
   translate x' y' $ renderAsteroid p)
 
 renderPlayer :: Player -> Color -> Picture
-renderPlayer (Player { position = Pos (Vec2 x' y'), rotation = Rot r }) c =
-  translate x' y'
-  $ rotate (fromIntegral r)
-  $ color c
-  $ renderSpaceShip c
+renderPlayer p@(Player { position = Pos (Vec2 x' y'), rotation = Rot r }) c
+  | isKilled p = blank
+  | otherwise  = translate x' y'
+                 $ rotate (fromIntegral r)
+                 $ color c
+                 $ renderSpaceShip c
 
 renderHp :: (Float -> Float) -> Player -> Color -> Picture
 renderHp f p c = Pictures [
