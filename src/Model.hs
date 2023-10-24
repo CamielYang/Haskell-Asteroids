@@ -40,8 +40,7 @@ newtype Timer     = Time Float
 
 newtype Score     = Score Int deriving (Show)
 
-data Screen       = Menu | InGame | GameOver deriving (Eq)
-data Status       = Paused | Active deriving (Eq)
+data Screen       = Menu | InGame | GameOver | Pause deriving (Eq)
 data Mode         = Singleplayer | Multiplayer deriving (Eq, Show)
 
 data Asteroid     = Asteroid Path Position Rotation
@@ -73,7 +72,6 @@ data GameState = GameState {
   playerOne :: Player,
   playerTwo :: Player,
   score     :: Score,
-  status    :: Status,
   keys      :: S.Set Key,
   stdGen    :: StdGen
 }
@@ -103,10 +101,12 @@ initialState = GameState {
   playerOne = initialPlayer,
   playerTwo = initialPlayer { position = Pos Vec2 { x = 50, y = 0 }},
   score     = Score 0,
-  status    = Active,
   keys      = S.empty,
   stdGen    = mkStdGen 100
 }
+
+newGame :: GameState -> Mode -> GameState
+newGame gs m = initialState { screen = InGame, mode = m, stdGen = stdGen gs }
 
 getRotation :: Player -> Int
 getRotation (Player { rotation = Rot r }) = r

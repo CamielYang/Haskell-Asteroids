@@ -5,6 +5,7 @@ import           Model
 
 import           Controllers.Game
 import           Controllers.Menu
+import           Controllers.Pause
 
 update :: Float -> GameState -> IO GameState
 update d gs
@@ -17,6 +18,7 @@ handleKeys :: Event -> GameState -> IO GameState
 handleKeys e gs
   | currentScreen == Menu   = return $ menuKeys e gs
   | currentScreen == InGame = return $ gameKeys e gs
+  | currentScreen == Pause  = return $ pauseKeys e gs
   | otherwise               = return gs
   where
     currentScreen = screen gs
