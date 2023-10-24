@@ -27,6 +27,7 @@ library
   exposed-modules:
       Controllers.Controller
       Controllers.Game
+      Controllers.GameOver
       Controllers.Menu
       Controllers.Pause
       Model
@@ -38,6 +39,7 @@ library
       Utils.Random
       Utils.Render
       Views.Game
+      Views.GameOver
       Views.Menu
       Views.Pause
       Views.View

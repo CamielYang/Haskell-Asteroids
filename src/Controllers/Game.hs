@@ -71,8 +71,9 @@ updatePlayer :: (Player -> GameState)
               -> Key
               -> Key
               -> GameState
-updatePlayer f dt gs p u d l r s = do
-  (f newPlayer) {
+updatePlayer f dt gs p u d l r s
+  | isKilled p = gs
+  | otherwise = (f newPlayer) {
     world = (world gs) {
       projectiles = handleShoot p gs s
     }
@@ -139,8 +140,17 @@ updateAsteroids (GameState { world = World { asteroids = as, projectiles = ps } 
         ld          = largestRadius path
         collided    = any (`projectileCollided` asteroid) ps
 
+isGameOver :: GameState -> Bool
+isGameOver gs = hp1 <= 0 && (isSp || hp2 <= 0)
+  where
+    isSp = mode gs == Singleplayer
+    hp1 = getHp $ playerOne gs
+    hp2 = getHp $ playerTwo gs
+
 updateWorld :: Float -> GameState -> GameState
-updateWorld d gs = newGs {
+updateWorld d gs
+  | isGameOver gs = gs { screen = GameOver }
+  | otherwise = newGs {
     world = (world newGs) {
       asteroids = newAs,
       powerUps  = []

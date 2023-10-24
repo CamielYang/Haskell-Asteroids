@@ -4,6 +4,7 @@ import           Graphics.Gloss.Interface.Pure.Game
 import           Model
 
 import           Controllers.Game
+import           Controllers.GameOver
 import           Controllers.Menu
 import           Controllers.Pause
 
@@ -16,9 +17,10 @@ update d gs
 
 handleKeys :: Event -> GameState -> IO GameState
 handleKeys e gs
-  | currentScreen == Menu   = return $ menuKeys e gs
-  | currentScreen == InGame = return $ gameKeys e gs
-  | currentScreen == Pause  = return $ pauseKeys e gs
-  | otherwise               = return gs
+  | currentScreen == Menu     = return $ menuKeys e gs
+  | currentScreen == InGame   = return $ gameKeys e gs
+  | currentScreen == Pause    = return $ pauseKeys e gs
+  | currentScreen == GameOver = return $ gameOverKeys e gs
+  | otherwise                 = return gs
   where
     currentScreen = screen gs
