@@ -10,8 +10,18 @@ import           Utils.PathModels
 import           Utils.Random
 import           Utils.Render
 
+withinBox :: Position -> Position
+withinBox (Pos (Vec2 x' y'))
+  | x' < windowLeft = Pos (Vec2 0 0)
+  | x' > windowRight = Pos (Vec2 0 0)
+  | y' < windowBottom = Pos (Vec2 0 0)
+  | y' > windowTop = Pos (Vec2 0 0)
+  | otherwise = Pos (Vec2 x' y')
+  where 
+    shipMargin = 50
+
 updatePosition :: Player -> Position
-updatePosition (Player { position = Pos pVec, velocity = Vel vVec }) = Pos (pVec + vVec)
+updatePosition (Player { position = Pos pVec, velocity = Vel vVec }) = withinBox $ Pos (pVec + vVec)
 
 updateRotation :: Player -> GameState -> Key -> Key -> Rotation
 updateRotation p gs l r
