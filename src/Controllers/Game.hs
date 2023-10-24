@@ -77,9 +77,9 @@ updateProjectiles _ gs@(GameState { world = World { projectiles = [] } }) = gs
 updateProjectiles d gs@(GameState { world = World { projectiles = ps, asteroids = as } }) =
   gs {
     world = (world gs) { projectiles = map func filtered },
-    score = if any notCollided ps
-            then score gs
-            else addScore (score gs)
+    score = if (not . all notCollided) ps
+            then addScore (score gs)
+            else score gs
   }
   where
     filtered                                      = filter (\p -> notAged p && notCollided p) ps
