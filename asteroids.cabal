@@ -28,6 +28,7 @@ library
       Controllers.Controller
       Controllers.Game
       Controllers.Menu
+      Controllers.Pause
       Model
       Utils.Collision
       Utils.Keys
@@ -38,6 +39,7 @@ library
       Utils.Render
       Views.Game
       Views.Menu
+      Views.Pause
       Views.View
   other-modules:
       Paths_asteroids

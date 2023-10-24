@@ -13,8 +13,8 @@ windowRight  = fromIntegral width / 2
 windowTop    = fromIntegral height / 2
 windowBottom = fromIntegral (-height) / 2
 
-renderText :: String -> Float -> Float -> Float -> Float -> Picture
-renderText t x' y' sx sy = translate x' y' $ scale sx sy $ color white $ text t
+renderText :: String -> Float -> Float -> Float -> Picture
+renderText t x' y' s = translate x' y' $ scale s s $ color white $ text t
 
 renderSpaceShip :: Color -> Picture
 renderSpaceShip c = color c $ lineLoop shipPath

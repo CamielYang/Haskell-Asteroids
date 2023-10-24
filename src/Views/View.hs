@@ -10,6 +10,7 @@ import           Model
 import           Utils.Render
 import           Views.Game
 import           Views.Menu
+import           Views.Pause
 
 window :: Display
 window = InWindow "Asteroids" (width, height) (0, 0)
@@ -24,6 +25,7 @@ render :: GameState -> IO Picture
 render gs
   | currentScreen == Menu   = return $ renderMenu gs
   | currentScreen == InGame = return $ renderGame gs
+  | currentScreen == Pause  = return $ renderPause gs
   | otherwise               = return $ renderMenu gs
   where
     currentScreen = screen gs

@@ -44,8 +44,8 @@ renderGame gs = Pictures [
       isMp $ renderHp (\x -> windowRight - 25 * x) p2 yellow
     ]
   where
-    title = renderText (show $ mode gs) (-75) (windowTop - 40) 0.2 0.2
-    renderScore = renderText (show $ score gs) (-50) (windowBottom + 25) 0.2 0.2
+    title = renderText (show $ mode gs) (-75) (windowTop - 40) 0.2
+    renderScore = renderText (show $ score gs) (-50) (windowBottom + 25) 0.2
     p1 = playerOne gs
     p2 = playerTwo gs
     isMp p

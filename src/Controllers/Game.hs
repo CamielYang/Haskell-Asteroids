@@ -77,9 +77,9 @@ updateProjectiles _ gs@(GameState { world = World { projectiles = [] } }) = gs
 updateProjectiles d gs@(GameState { world = World { projectiles = ps, asteroids = as } }) =
   gs {
     world = (world gs) { projectiles = map func filtered },
-    score = if any notCollided ps
-            then score gs
-            else addScore (score gs)
+    score = if (not . all notCollided) ps
+            then addScore (score gs)
+            else score gs
   }
   where
     filtered                                      = filter (\p -> notAged p && notCollided p) ps
@@ -175,11 +175,7 @@ updateGame d gs = gs2 {
           else gs1
 
 gameKeys :: Event -> GameState -> GameState
-gameKeys (EventKey (SpecialKey KeyEsc) Down _ _) gameState =
-  gameState { status = toggleStatus (status gameState) }
-  where
-    toggleStatus Active = Paused
-    toggleStatus Paused = Active
-gameKeys (EventKey k Down _ _) gameState = gameState { keys = S.insert k (keys gameState)}
-gameKeys (EventKey k Up _ _) gameState   = gameState { keys = S.delete k (keys gameState)}
-gameKeys _ gameState                     = gameState
+gameKeys (EventKey (SpecialKey KeyEsc) Down _ _) gs = gs { screen = Pause }
+gameKeys (EventKey k Down _ _) gs                   = gs { keys = S.insert k (keys gs)}
+gameKeys (EventKey k Up _ _) gs                     = gs { keys = S.delete k (keys gs)}
+gameKeys _ gs                                       = gs
