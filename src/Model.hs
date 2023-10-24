@@ -1,7 +1,7 @@
 module Model where
 
-import qualified Data.Set                         as S
-import           Graphics.Gloss.Interface.IO.Game
+import qualified Data.Set                           as S
+import           Graphics.Gloss.Interface.Pure.Game
 import           System.Random
 
 force,
@@ -44,7 +44,6 @@ data Screen       = Menu | InGame | GameOver deriving (Eq)
 data Status       = Paused | Active deriving (Eq)
 data Mode         = Singleplayer | Multiplayer deriving (Eq, Show)
 
-data AsteroidType = AsteroidLg | AsteroidMd | AsteroidSm deriving (Eq, Ord)
 data Asteroid     = Asteroid Path Position Rotation
 data Projectile   = Projectile Position Rotation Timer
 

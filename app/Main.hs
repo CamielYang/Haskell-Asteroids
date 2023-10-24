@@ -1,7 +1,7 @@
 module Main where
 
 import           Controllers.Controller
-import           Graphics.Gloss.Interface.Pure.Game
+import           Graphics.Gloss.Interface.IO.Game
 import           Model
 import           System.Random
 import           Views.View
@@ -9,11 +9,11 @@ import           Views.View
 main :: IO ()
 main = do
   seed <- getStdGen
-  play
+  playIO
     window
     background
     frames
-    initialState { stdGen = seed }
+    initialState { stdGen = mkStdGen 100 }
     render
     handleKeys
     update

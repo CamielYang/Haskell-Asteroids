@@ -7,7 +7,6 @@ import           Utils.Collision
 import           Utils.Keys
 import           Utils.Lib
 import           Utils.PathModels
-import           Utils.Point
 import           Utils.Random
 import           Utils.Render
 
