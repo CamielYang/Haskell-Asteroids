@@ -12,13 +12,17 @@ import           Utils.Render
 
 withinBox :: Position -> Position
 withinBox (Pos (Vec2 x' y'))
-  | x' < windowLeft = Pos (Vec2 0 0)
-  | x' > windowRight = Pos (Vec2 0 0)
-  | y' < windowBottom = Pos (Vec2 0 0)
-  | y' > windowTop = Pos (Vec2 0 0)
+  | x' < wl = Pos (Vec2 (windowRight + shipMargin) $ -y')
+  | x' > wr = Pos (Vec2 (windowLeft - shipMargin) $ -y')
+  | y' < wb = Pos (Vec2 (-x') $ windowTop + shipMargin)
+  | y' > wt = Pos (Vec2 (-x') $ windowBottom - shipMargin)
   | otherwise = Pos (Vec2 x' y')
-  where 
-    shipMargin = 50
+  where
+    wl = windowLeft - shipMargin
+    wr = windowRight + shipMargin
+    wb = windowBottom - shipMargin
+    wt = windowTop + shipMargin
+    shipMargin = 35
 
 updatePosition :: Player -> Position
 updatePosition (Player { position = Pos pVec, velocity = Vel vVec }) = withinBox $ Pos (pVec + vVec)
@@ -95,7 +99,7 @@ updateProjectiles d gs@(GameState { world = World { projectiles = ps, asteroids 
     filtered                                      = filter (\p -> notAged p && notCollided p) ps
     notCollided p                                 = not (any (projectileCollided p) as)
     notAged (Projectile _ _ (Time t))             = t > 0
-    func (Projectile (Pos pVec) (Rot r) (Time t)) = Projectile (Pos (pVec + dirVec)) (Rot r) (Time $ t - d)
+    func (Projectile (Pos pVec) (Rot r) (Time t)) = Projectile (withinBox $ Pos (pVec + dirVec)) (Rot r) (Time $ t - d)
       where
         dirVec = degreeToVector r * Vec2 projectileSpeed projectileSpeed
 
@@ -128,7 +132,7 @@ updateAsteroids (GameState { world = World { asteroids = as, projectiles = ps } 
     func asteroid@(Asteroid path (Pos posVec) (Rot r)) gen'
       | collided && ld >= 30 = ([a1,a2], gen2')
       | collided && ld < 30  = ([], gen')
-      | otherwise            = ([Asteroid path (Pos (posVec + degreeToVector r)) (Rot r)], gen')
+      | otherwise            = ([Asteroid path (withinBox $ Pos (posVec + degreeToVector r)) (Rot r)], gen')
       where
         (a1, gen1') = splitAsteroid asteroid gen
         (a2, gen2') = splitAsteroid asteroid gen1'
