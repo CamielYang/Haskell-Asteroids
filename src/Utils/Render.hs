@@ -3,11 +3,9 @@ import           Graphics.Gloss
 import           Utils.PathModels
 import           Utils.Point
 
-width, height :: Float
-width = 1500 
+windowLeft, windowRight, windowTop, windowBottom, width, height :: Float
+width = 1500
 height = 750
-
-windowLeft, windowRight, windowTop, windowBottom :: Float
 windowLeft   = (-width) / 2
 windowRight  = width / 2
 windowTop    = height / 2
