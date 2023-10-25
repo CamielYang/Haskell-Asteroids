@@ -3,6 +3,7 @@ import           Graphics.Gloss
 import           Models.Model
 import           Models.ModelLib
 import           Models.Renderable
+import           Models.SpaceShip
 import           Utils.Render
 
 renderHp :: (Float -> Float) -> Player -> Picture

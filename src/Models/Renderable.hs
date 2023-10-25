@@ -1,8 +1,8 @@
 module Models.Renderable where
 import           Graphics.Gloss
 import           Models.Model
-import           Models.ModelLib
 import           Models.Positioned
+import           Models.SpaceShip
 import           Utils.Render      (renderSpaceShip)
 
 class (Positioned a) => Renderable a where

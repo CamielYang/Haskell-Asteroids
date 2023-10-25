@@ -5,74 +5,13 @@ import           Models.Collidable
 import           Models.Model
 import           Models.ModelLib
 import           Models.Positioned
+import           Models.SpaceShip
 import           System.Random                      (StdGen)
 import           Utils.Keys
 import           Utils.Lib
 import           Utils.PathModels
 import           Utils.Random
 import           Utils.Render
-
-updateRotation :: Player -> GameState -> Key -> Key -> Rotation
-updateRotation p gs l r
-  | S.member l (keys gs) = setRotation p (-rotationSpeed)
-  | S.member r (keys gs) = setRotation p rotationSpeed
-  | otherwise            = rotation p
-
-updateVelocity :: Player -> GameState -> Key -> Key -> Velocity
-updateVelocity p gs u d
-  | S.member u (keys gs) = setVelocity p force
-  | S.member d (keys gs) = setVelocity p (-force / 2)
-  | otherwise            = setVelocity p 0
-
-updateHealth :: Player -> GameState -> Health
-updateHealth p gs
-  | shipCollided p gs && getCooldown p <= 0 = HP (getHp p - 1)
-  | getHp p <= 0                            = HP 0
-  | otherwise                               = health p
-
-updateCooldown :: Player -> Float -> GameState -> Timer
-updateCooldown p delta gs
-  | shipCollided p gs = Time 3
-  | getCooldown p > 0 = Time $ getCooldown p - delta
-  | otherwise         = Time 0
-
-handleShoot :: Player -> GameState -> Key -> [Projectile]
-handleShoot p@(Player _ r@(Rot rot) _ _ _ _ weaponType _) gs s
-  | weaponType == Default && S.member s (keys gs) = Projectile (updatePosition p dirVec) r (Time projectileLifeTime) : ps
-  | weaponType == Shotgun && S.member s (keys gs) = weaponShotgun 10 : weaponShotgun 0 : weaponShotgun (-10) : ps
-  | weaponType == Rifle && S.member s (keys gs) = weaponRifle 1 : weaponRifle 2 : weaponRifle 3 : ps
-  | otherwise  = ps
-  where
-    ps            = projectiles (world gs)
-    dirVec        = degreeToVector rot * Vec2 shootDistance shootDistance
-    weaponShotgun deg = Projectile (updatePosition p dirVec) (Rot $ rot + deg) (Time projectileLifeTime)
-    weaponRifle deg = Projectile (updatePosition p (dirVec * deg)) r (Time projectileLifeTime)
-
-updatePlayer :: (Player -> GameState)
-              -> Float
-              -> GameState
-              -> Player
-              -> Key
-              -> Key
-              -> Key
-              -> Key
-              -> Key
-              -> GameState
-updatePlayer f dt gs p u d l r s
-  | isKilled p = gs
-  | otherwise = (f newPlayer) {
-    world = (world gs) {
-      projectiles = handleShoot newPlayer gs s
-    }
-  }
-  where
-    newPlayer = p {
-      rotation = updateRotation p gs l r
-    , position = move p
-    , velocity = updateVelocity p gs u d
-    , health   = updateHealth p gs
-    , cooldown = updateCooldown p dt gs
-    }
 
 updateProjectiles :: Float -> GameState -> GameState
 updateProjectiles _ gs@(GameState { world = World { projectiles = [] } }) = gs
@@ -164,11 +103,6 @@ updateGame d gs = gs2 {
             d
             newGs
             (playerOne newGs)
-            (Char 'w')
-            (Char 's')
-            (Char 'a')
-            (Char 'd')
-            (SpecialKey KeySpace)
     gs2 = if mode gs == Multiplayer
           then
           updatePlayer
@@ -176,11 +110,6 @@ updateGame d gs = gs2 {
             d
             gs1
             (playerTwo gs1)
-            (SpecialKey KeyUp)
-            (SpecialKey KeyDown)
-            (SpecialKey KeyLeft)
-            (SpecialKey KeyRight)
-            (SpecialKey KeyEnter)
           else gs1
 
 gameKeys :: Event -> GameState -> GameState

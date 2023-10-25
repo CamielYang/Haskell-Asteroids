@@ -52,7 +52,7 @@ data WeaponType   = Default | Shotgun | Rifle deriving (Eq)
 data PowerUpType  = Heart Int | Weapon WeaponType
 data PowerUp      = PowerUp PowerUpType Position
 
-data Player       = Player {
+data Player = Player {
   health   :: Health,
   rotation :: Rotation,
   position :: Position,
@@ -60,7 +60,16 @@ data Player       = Player {
   path     :: Path,
   velocity :: Velocity,
   weapon   :: WeaponType,
-  cooldown :: Timer
+  cooldown :: Timer,
+  pKeys    :: PlayerKeys
+}
+
+data PlayerKeys = PlayerKeys {
+  up    :: Key,
+  down  :: Key,
+  left  :: Key,
+  right :: Key,
+  shoot :: Key
 }
 
 data World = World {

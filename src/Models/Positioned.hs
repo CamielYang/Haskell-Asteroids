@@ -1,4 +1,3 @@
-{-# LANGUAGE InstanceSigs #-}
 module Models.Positioned where
 import           Models.Model
 import           Utils.Lib    (degreeToVector)
@@ -34,7 +33,6 @@ instance Positioned Player where
 instance Positioned Asteroid where
   getMoveVector (Asteroid _ _ (Rot rot)) = degreeToVector rot
   getRotation (Asteroid _ _ (Rot r)) = r
-  getPosition :: Asteroid -> Vector2
   getPosition (Asteroid _ (Pos pv) _) = pv
 
 instance Positioned Projectile where

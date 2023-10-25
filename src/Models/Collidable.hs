@@ -1,7 +1,6 @@
 module Models.Collidable where
 import           Graphics.Gloss
 import           Models.Model
-import           Models.ModelLib
 import           Models.Positioned
 
 largestRadius :: Path -> Float
