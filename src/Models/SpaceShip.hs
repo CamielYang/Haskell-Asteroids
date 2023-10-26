@@ -14,6 +14,7 @@ class SpaceShip a where
   getHp :: a -> Int
   getCooldown :: a -> Float
   isKilled :: a -> Bool
+  collided :: a -> GameState -> Bool
   createProjectiles :: a -> GameState -> [Projectile]
   handleShoot :: a -> GameState -> [Projectile]
   updateCooldown :: a -> Float -> GameState -> Timer
@@ -30,6 +31,8 @@ instance SpaceShip Player where
   getCooldown (Player { cooldown = Time c }) = c
 
   isKilled p = getHp p == 0
+
+  collided p gs = any (isColliding p) (asteroids $ world gs) && getCooldown p <= 0
 
   createProjectiles p gs
     | isWt Shotgun = weaponShotgun (-10) : weaponShotgun 0 : weaponShotgun 10 : ps
@@ -52,12 +55,12 @@ instance SpaceShip Player where
       ps    = projectiles (world gs)
 
   updateCooldown p delta gs
-    | shipCollided p gs = Time 3
+    | collided p gs = Time 3
     | getCooldown p > 0 = Time $ getCooldown p - delta
     | otherwise         = Time 0
 
   updateHealth p gs
-    | shipCollided p gs && getCooldown p <= 0 = HP (getHp p - 1)
+    | collided p gs && getCooldown p <= 0 = HP (getHp p - 1)
     | getHp p <= 0                            = HP 0
     | otherwise                               = health p
 

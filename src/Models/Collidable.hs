@@ -29,6 +29,3 @@ instance Collidable Asteroid where
 
 instance Collidable Projectile where
   getHitboxRadius _ = 1
-
-shipCollided :: Player -> GameState -> Bool
-shipCollided p gs = any (isColliding p) (asteroids $ world gs) && getCooldown p <= 0

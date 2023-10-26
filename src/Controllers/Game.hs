@@ -8,7 +8,6 @@ import           Models.Positioned
 import           Models.SpaceShip
 import           System.Random                      (StdGen)
 import           Utils.Keys
-import           Utils.Lib
 import           Utils.PathModels
 import           Utils.Random
 import           Utils.Render
@@ -32,9 +31,9 @@ randomAsteroid :: StdGen -> (Asteroid, StdGen)
 randomAsteroid gen = (Asteroid path' (Pos (Vec2 x' y')) (Rot rot), gen4)
   where
     (path', gen1) = asteroidPath gen
-    (rot, gen2)  = randomInt 0 360 gen1
-    (x', gen3)   = randomFloat windowLeft windowRight gen2
-    (y', gen4)   = randomFloat windowBottom windowTop gen3
+    (rot, gen2)   = randomInt 0 360 gen1
+    (x', gen3)    = randomFloat windowLeft windowRight gen2
+    (y', gen4)    = randomFloat windowBottom windowTop gen3
 
 splitAsteroid :: Asteroid -> StdGen -> (Asteroid, StdGen)
 splitAsteroid a gen = (Asteroid path' (updatePosition a (Vec2 dX dY)) (Rot dR), gen4)
@@ -55,21 +54,19 @@ updateAsteroids (GameState { world = World { asteroids = as, projectiles = ps } 
     (newAsteroid, gen2) = randomAsteroid gen1
     func :: Asteroid -> StdGen -> ([Asteroid], StdGen)
     func asteroid@(Asteroid path' _ (Rot r)) gen'
-      | collided && ld >= 30 = ([a1,a2], gen2')
-      | collided && ld < 30  = ([], gen')
+      | psCollided && ld >= 30 = ([a1,a2], gen2')
+      | psCollided && ld < 30  = ([], gen')
       | otherwise            = ([Asteroid path' (move asteroid) (Rot r)], gen')
       where
         (a1, gen1') = splitAsteroid asteroid gen
         (a2, gen2') = splitAsteroid asteroid gen1'
         ld          = largestRadius path'
-        collided    = any (isColliding asteroid) ps
+        psCollided    = any (isColliding asteroid) ps
 
 isGameOver :: GameState -> Bool
-isGameOver gs = hp1 <= 0 && (isSp || hp2 <= 0)
+isGameOver gs = isKilled (playerOne gs) && (isSp || isKilled (playerTwo gs))
   where
     isSp = mode gs == Singleplayer
-    hp1 = getHp $ playerOne gs
-    hp2 = getHp $ playerTwo gs
 
 updateWorld :: Float -> GameState -> GameState
 updateWorld d gs
