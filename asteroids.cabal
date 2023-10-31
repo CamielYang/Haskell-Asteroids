@@ -33,10 +33,10 @@ library
       Models.Collidable
       Models.Model
       Models.ModelLib
-      Models.Monad
       Models.Positioned
       Models.Renderable
       Models.SpaceShip
+      Models.StateMonad
       Utils.Keys
       Utils.Lib
       Utils.PathModels

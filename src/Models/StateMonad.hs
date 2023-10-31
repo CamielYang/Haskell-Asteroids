@@ -1,4 +1,7 @@
-module Models.Monad where
+{-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use tuple-section" #-}
+module Models.StateMonad where
 
 import           Control.Monad
 import           Models.Model

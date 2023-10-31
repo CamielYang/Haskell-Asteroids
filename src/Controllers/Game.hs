@@ -4,9 +4,9 @@ import           Graphics.Gloss.Interface.Pure.Game
 import           Models.Collidable
 import           Models.Model
 import           Models.ModelLib
-import           Models.Monad
 import           Models.Positioned
 import           Models.SpaceShip
+import           Models.StateMonad
 import           System.Random
 import           Utils.Keys
 import           Utils.PathModels
@@ -30,17 +30,17 @@ updateProjectiles d gs@(GameState { world = World { projectiles = ps, asteroids 
 
 updateAsteroids' :: GameState -> State StdGen [Asteroid]
 updateAsteroids' (GameState { world = World { asteroids = as, projectiles = ps } }) = do
-  mapped <- mapRandom' func as
+  mapped <- mapRandom func as
   let newAs = concat mapped
-  newAsteroid <- randomAsteroid'
+  newAsteroid <- randomAsteroid
   let result | length as < 10 = newAsteroid : newAs
              | otherwise      = newAs
   return result
   where
     func :: Asteroid -> State StdGen [Asteroid]
     func asteroid@(Asteroid path' _ (Rot r)) = do
-      a1 <- splitAsteroid' asteroid
-      a2 <- splitAsteroid' asteroid
+      a1 <- splitAsteroid asteroid
+      a2 <- splitAsteroid asteroid
 
       let result | psCollided && ld >= 30 = [a1,a2]
                  | psCollided && ld < 30  = []
@@ -51,20 +51,20 @@ updateAsteroids' (GameState { world = World { asteroids = as, projectiles = ps }
         ld         = largestRadius path'
         psCollided = any (isColliding asteroid) ps
 
-randomAsteroid' :: State StdGen Asteroid
-randomAsteroid' = do
-  path' <- asteroidPath'
-  rot   <- randomInt' 0 360
-  x'    <- randomFloat' windowLeft windowRight
-  y'    <- randomFloat' windowBottom windowTop
+randomAsteroid :: State StdGen Asteroid
+randomAsteroid = do
+  path' <- asteroidPath
+  rot   <- randomInt 0 360
+  x'    <- randomFloat windowLeft windowRight
+  y'    <- randomFloat windowBottom windowTop
   return $ Asteroid path' (Pos (Vec2 x' y')) (Rot rot)
 
-splitAsteroid' :: Asteroid -> State StdGen Asteroid
-splitAsteroid' a = do
-  dX    <- randomFloat' 0 10
-  dY    <- randomFloat' 0 10
-  dR    <- randomInt' 0 360
-  path' <- asteroidPathScaled' size size
+splitAsteroid :: Asteroid -> State StdGen Asteroid
+splitAsteroid a = do
+  dX    <- randomFloat 0 10
+  dY    <- randomFloat 0 10
+  dR    <- randomInt 0 360
+  path' <- asteroidPathScaled size size
   return $ Asteroid path' (updatePosition a (Vec2 dX dY)) (Rot dR)
   where
     size = getHitboxRadius a / 3
