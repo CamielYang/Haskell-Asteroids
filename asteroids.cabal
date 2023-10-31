@@ -33,6 +33,7 @@ library
       Models.Collidable
       Models.Model
       Models.ModelLib
+      Models.Monad
       Models.Positioned
       Models.Renderable
       Models.SpaceShip

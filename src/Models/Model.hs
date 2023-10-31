@@ -1,5 +1,6 @@
 module Models.Model where
 
+import           Control.Monad
 import qualified Data.Set                           as S
 import           Graphics.Gloss.Interface.Pure.Game
 import           System.Random
@@ -39,6 +40,7 @@ newtype Velocity  = Vel Vector2
 newtype Rotation  = Rot Int
 newtype Health    = HP Int
 newtype Timer     = Time Float
+newtype State s a = S (s -> (a, s))
 
 newtype Score     = Score Int deriving (Show)
 

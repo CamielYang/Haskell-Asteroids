@@ -4,9 +4,10 @@ import           Graphics.Gloss.Interface.Pure.Game
 import           Models.Collidable
 import           Models.Model
 import           Models.ModelLib
+import           Models.Monad
 import           Models.Positioned
 import           Models.SpaceShip
-import           System.Random                      (StdGen)
+import           System.Random
 import           Utils.Keys
 import           Utils.PathModels
 import           Utils.Random
@@ -27,41 +28,46 @@ updateProjectiles d gs@(GameState { world = World { projectiles = ps, asteroids 
     notAged (Projectile _ _ (Time t))      = t > 0
     func p@(Projectile _ (Rot r) (Time t)) = Projectile (move p) (Rot r) (Time $ t - d)
 
-randomAsteroid :: StdGen -> (Asteroid, StdGen)
-randomAsteroid gen = (Asteroid path' (Pos (Vec2 x' y')) (Rot rot), gen4)
+updateAsteroids' :: GameState -> State StdGen [Asteroid]
+updateAsteroids' (GameState { world = World { asteroids = as, projectiles = ps } }) = do
+  mapped <- mapRandom' func as
+  let newAs = concat mapped
+  newAsteroid <- randomAsteroid'
+  let result | length as < 10 = newAsteroid : newAs
+             | otherwise      = newAs
+  return result
   where
-    (path', gen1) = asteroidPath gen
-    (rot, gen2)   = randomInt 0 360 gen1
-    (x', gen3)    = randomFloat windowLeft windowRight gen2
-    (y', gen4)    = randomFloat windowBottom windowTop gen3
+    func :: Asteroid -> State StdGen [Asteroid]
+    func asteroid@(Asteroid path' _ (Rot r)) = do
+      a1 <- splitAsteroid' asteroid
+      a2 <- splitAsteroid' asteroid
 
-splitAsteroid :: Asteroid -> StdGen -> (Asteroid, StdGen)
-splitAsteroid a gen = (Asteroid path' (updatePosition a (Vec2 dX dY)) (Rot dR), gen4)
-  where
-    (dX, gen1)    = randomFloat 0 10 gen
-    (dY, gen2)    = randomFloat 0 10 gen1
-    (dR, gen3)    = randomInt 0 360 gen2
-    (path', gen4) = asteroidPathScaled size size gen3
-    size          = getHitboxRadius a / 3
+      let result | psCollided && ld >= 30 = [a1,a2]
+                 | psCollided && ld < 30  = []
+                 | otherwise              = [Asteroid path' (move asteroid) (Rot r)]
 
-updateAsteroids :: GameState -> StdGen -> ([Asteroid], StdGen)
-updateAsteroids (GameState { world = World { asteroids = as, projectiles = ps } }) gen
-  | length as < 10 = (newAsteroid : newAs, gen2)
-  | otherwise      = (newAs, gen2)
-  where
-    (mapped, gen1)      = mapRandom func as gen
-    newAs               = concat mapped
-    (newAsteroid, gen2) = randomAsteroid gen1
-    func :: Asteroid -> StdGen -> ([Asteroid], StdGen)
-    func asteroid@(Asteroid path' _ (Rot r)) gen'
-      | psCollided && ld >= 30 = ([a1,a2], gen2')
-      | psCollided && ld < 30  = ([], gen')
-      | otherwise            = ([Asteroid path' (move asteroid) (Rot r)], gen')
+      return result
       where
-        (a1, gen1') = splitAsteroid asteroid gen
-        (a2, gen2') = splitAsteroid asteroid gen1'
-        ld          = largestRadius path'
-        psCollided    = any (isColliding asteroid) ps
+        ld         = largestRadius path'
+        psCollided = any (isColliding asteroid) ps
+
+randomAsteroid' :: State StdGen Asteroid
+randomAsteroid' = do
+  path' <- asteroidPath'
+  rot   <- randomInt' 0 360
+  x'    <- randomFloat' windowLeft windowRight
+  y'    <- randomFloat' windowBottom windowTop
+  return $ Asteroid path' (Pos (Vec2 x' y')) (Rot rot)
+
+splitAsteroid' :: Asteroid -> State StdGen Asteroid
+splitAsteroid' a = do
+  dX    <- randomFloat' 0 10
+  dY    <- randomFloat' 0 10
+  dR    <- randomInt' 0 360
+  path' <- asteroidPathScaled' size size
+  return $ Asteroid path' (updatePosition a (Vec2 dX dY)) (Rot dR)
+  where
+    size = getHitboxRadius a / 3
 
 isGameOver :: GameState -> Bool
 isGameOver gs = isKilled (playerOne gs) && (isSp || isKilled (playerTwo gs))
@@ -79,7 +85,7 @@ updateWorld d gs
     stdGen = newGen
   }
   where
-    (newAs, newGen) = updateAsteroids gs (stdGen gs)
+    (newAs, newGen) = runState (updateAsteroids' gs) (stdGen gs)
     newGs           = updateProjectiles d gs
 
 -- obtainPowerUp :: PowerUpType -> Player -> Player

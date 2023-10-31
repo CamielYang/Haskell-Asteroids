@@ -1,9 +1,12 @@
 module Utils.PathModels (
   shipPath,
   asteroidPathScaled,
-  asteroidPath
+  asteroidPath,
+  asteroidPathScaled',
+  asteroidPath'
 ) where
 import           Graphics.Gloss
+import           Models.Model
 import           System.Random
 import           Utils.Point    (scalePath)
 import           Utils.Random
@@ -31,3 +34,12 @@ asteroidPathScaled min' max' gen = (scalePath size $ centerPath asteroidGen, gen
 
 asteroidPath :: StdGen -> (Path, StdGen)
 asteroidPath = asteroidPathScaled 15 40
+
+asteroidPathScaled' :: Float -> Float -> State StdGen Path
+asteroidPathScaled' min' max' = do
+  size <- randomFloat' min' max'
+  asteroidGen <- deviatePath' 0.5 1 [(0,0), (1,0),(2,-1), (2,-2), (1,-3), (0,-3), (-1,-2), (-1,-1)]
+  return $ scalePath size $ centerPath asteroidGen
+
+asteroidPath' :: State StdGen Path
+asteroidPath' = asteroidPathScaled' 15 40
