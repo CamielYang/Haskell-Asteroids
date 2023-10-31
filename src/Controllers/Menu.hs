@@ -1,6 +1,7 @@
 module Controllers.Menu (menuKeys) where
 import           Graphics.Gloss.Interface.Pure.Game
-import           Model
+import           Models.Model
+import           Models.ModelLib
 
 menuKeys :: Event -> GameState -> GameState
 menuKeys (EventKey (Char 'a') Down _ _) gs = newGame gs Singleplayer

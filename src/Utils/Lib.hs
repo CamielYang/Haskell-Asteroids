@@ -1,5 +1,5 @@
 module Utils.Lib where
-import           Model
+import           Models.Model
 
 degreeToRadian :: Int -> Float
 degreeToRadian d = fromIntegral d * pi / 180

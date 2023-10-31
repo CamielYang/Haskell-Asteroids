@@ -30,8 +30,12 @@ library
       Controllers.GameOver
       Controllers.Menu
       Controllers.Pause
-      Model
-      Utils.Collision
+      Models.Collidable
+      Models.Model
+      Models.ModelLib
+      Models.Positioned
+      Models.Renderable
+      Models.SpaceShip
       Utils.Keys
       Utils.Lib
       Utils.PathModels

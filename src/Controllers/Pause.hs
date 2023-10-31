@@ -1,6 +1,7 @@
 module Controllers.Pause (pauseKeys) where
 import           Graphics.Gloss.Interface.Pure.Game
-import           Model
+import           Models.Model
+import           Models.ModelLib
 
 pauseKeys :: Event -> GameState -> GameState
 pauseKeys (EventKey (SpecialKey KeyEsc) Down _ _) gs = gs { screen = InGame }
