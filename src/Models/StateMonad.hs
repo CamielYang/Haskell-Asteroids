@@ -12,6 +12,7 @@ instance Functor (State s) where
 instance Applicative (State s) where
   pure x' = S $ \s -> (x', s)
   (<*>) = ap
+
 instance Monad (State s) where
   return = pure
   (S f) >>= g = S $ \s -> let (x', s') = f s in

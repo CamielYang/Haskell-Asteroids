@@ -7,7 +7,6 @@ import           Models.ModelLib
 import           Models.Positioned
 import           Models.SpaceShip
 import           Models.StateMonad
-import           System.Random
 import           Utils.Keys
 import           Utils.PathModels
 import           Utils.Random
@@ -28,17 +27,19 @@ updateProjectiles d gs@(GameState { world = World { projectiles = ps, asteroids 
     notAged (Projectile _ _ (Time t))      = t > 0
     func p@(Projectile _ (Rot r) (Time t)) = Projectile (move p) (Rot r) (Time $ t - d)
 
-updateAsteroids' :: GameState -> State StdGen [Asteroid]
-updateAsteroids' (GameState { world = World { asteroids = as, projectiles = ps } }) = do
-  mapped <- mapRandom func as
-  let newAs = concat mapped
-  newAsteroid <- randomAsteroid
-  let result | length as < 10 = newAsteroid : newAs
-             | otherwise      = newAs
+updateAsteroids :: GameState -> GenState [Asteroid]
+updateAsteroids (GameState { world = World { asteroids = as, projectiles = ps } }) = do
+  collidedAs    <- mapRandom updateCollided as
+  spawnAsteroid <- randomAsteroid
+
+  let collidedAs' = concat collidedAs
+  let result | length as < 10 = spawnAsteroid : collidedAs'
+             | otherwise      = collidedAs'
+
   return result
   where
-    func :: Asteroid -> State StdGen [Asteroid]
-    func asteroid@(Asteroid path' _ (Rot r)) = do
+    updateCollided :: Asteroid -> GenState [Asteroid]
+    updateCollided asteroid@(Asteroid path' _ (Rot r)) = do
       a1 <- splitAsteroid asteroid
       a2 <- splitAsteroid asteroid
 
@@ -51,7 +52,7 @@ updateAsteroids' (GameState { world = World { asteroids = as, projectiles = ps }
         ld         = largestRadius path'
         psCollided = any (isColliding asteroid) ps
 
-randomAsteroid :: State StdGen Asteroid
+randomAsteroid :: GenState Asteroid
 randomAsteroid = do
   path' <- asteroidPath
   rot   <- randomInt 0 360
@@ -59,13 +60,13 @@ randomAsteroid = do
   y'    <- randomFloat windowBottom windowTop
   return $ Asteroid path' (Pos (Vec2 x' y')) (Rot rot)
 
-splitAsteroid :: Asteroid -> State StdGen Asteroid
+splitAsteroid :: Asteroid -> GenState Asteroid
 splitAsteroid a = do
   dX    <- randomFloat 0 10
   dY    <- randomFloat 0 10
   dR    <- randomInt 0 360
-  path' <- asteroidPathScaled size size
-  return $ Asteroid path' (updatePosition a (Vec2 dX dY)) (Rot dR)
+  aPath <- asteroidPathScaled size size
+  return $ Asteroid aPath (updatePosition a (Vec2 dX dY)) (Rot dR)
   where
     size = getHitboxRadius a / 3
 
@@ -77,16 +78,16 @@ isGameOver gs = isKilled (playerOne gs) && (isSp || isKilled (playerTwo gs))
 updateWorld :: Float -> GameState -> GameState
 updateWorld d gs
   | isGameOver gs = gs { screen = GameOver }
-  | otherwise = newGs {
-    world = (world newGs) {
-      asteroids = newAs,
-      powerUps  = []
-    },
-    stdGen = newGen
-  }
+  | otherwise     = newGs {
+                      world = (world newGs) {
+                        asteroids = as,
+                        powerUps  = []
+                      },
+                      stdGen = gen
+                    }
   where
-    (newAs, newGen) = runState (updateAsteroids' gs) (stdGen gs)
-    newGs           = updateProjectiles d gs
+    (as, gen) = runState (updateAsteroids gs) (stdGen gs)
+    newGs     = updateProjectiles d gs
 
 -- obtainPowerUp :: PowerUpType -> Player -> Player
 -- obtainPowerUp (Heart n) player = player { health = HP (n + getHealth (health player)) }

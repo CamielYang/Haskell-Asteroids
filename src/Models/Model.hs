@@ -22,6 +22,9 @@ shootDistance      = 25
 projectileLifeTime = 2
 boundMargin        = 35
 
+newtype State s a = S (s -> (a, s))
+type GenState a   = State StdGen a
+
 data Vector2  = Vec2 {
   x :: Float,
   y :: Float
@@ -40,7 +43,6 @@ newtype Velocity  = Vel Vector2
 newtype Rotation  = Rot Int
 newtype Health    = HP Int
 newtype Timer     = Time Float
-newtype State s a = S (s -> (a, s))
 
 newtype Score     = Score Int deriving (Show)
 
