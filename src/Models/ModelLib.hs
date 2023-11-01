@@ -48,7 +48,7 @@ initialState = GameState {
     playerOne = initialPlayer red p1Keys,
     playerTwo = (initialPlayer yellow p2Keys) { position = Pos Vec2 { x = 50, y = 0 }},
     score     = Score 0,
-    keys     = S.empty,
+    keys      = S.empty,
     stdGen    = mkStdGen 100
   }
 
