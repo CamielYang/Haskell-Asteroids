@@ -24,8 +24,8 @@ class Positioned a where
   getPosition :: a -> Vector2
   move :: a -> Position
   move a = withinBox $ Pos (getPosition a + getMoveVector a)
-  updatePosition :: a -> Vector2 -> Position
-  updatePosition a vec = Pos (getPosition a + vec)
+  setPosition :: a -> Vector2 -> Position
+  setPosition a vec = Pos (getPosition a + vec)
 
 instance Positioned Player where
   getMoveVector (Player { velocity = Vel vVec }) = vVec
@@ -41,3 +41,8 @@ instance Positioned Projectile where
   getMoveVector (Projectile _ (Rot rot) _) = degreeToVector rot * Vec2 projectileSpeed projectileSpeed
   getRotation (Projectile _ (Rot r) _) = r
   getPosition (Projectile (Pos pv) _ _) = pv
+
+instance Positioned Particle where
+  getMoveVector (Particle a _) = getMoveVector a * Vec2 3 3
+  getRotation (Particle a _) = getRotation a
+  getPosition (Particle a _) = getPosition a

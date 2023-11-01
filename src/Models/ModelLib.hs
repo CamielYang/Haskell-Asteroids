@@ -19,7 +19,8 @@ initialWorld :: World
 initialWorld = World {
   asteroids   = [],
   projectiles = [],
-  powerUps    = []
+  powerUps    = [],
+  particles   = []
 }
 
 p1Keys :: PlayerKeys
@@ -66,3 +67,6 @@ getAsteroids gs = asteroids $ world gs
 
 getPowerUps :: GameState -> [PowerUp]
 getPowerUps gs = powerUps $ world gs
+
+getParticles :: GameState -> [Particle]
+getParticles gs = particles $ world gs

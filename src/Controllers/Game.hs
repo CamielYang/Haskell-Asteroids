@@ -32,7 +32,7 @@ updateAsteroids (GameState { world = World { asteroids = as, projectiles = ps } 
   spawnAsteroid <- randomAsteroid
 
   let collidedAs' = concat collidedAs
-  let result | length as < 10 = spawnAsteroid : collidedAs'
+  let result | length as < 50 = spawnAsteroid : collidedAs'
              | otherwise      = collidedAs'
 
   return result
@@ -42,13 +42,44 @@ updateAsteroids (GameState { world = World { asteroids = as, projectiles = ps } 
       a1 <- splitAsteroid asteroid
       a2 <- splitAsteroid asteroid
 
-      let result | psCollided && ld >= 30 = [a1,a2]
-                 | psCollided && ld < 30  = []
+      let result | psCollided && lr >= 30 = [a1,a2]
+                 | psCollided && lr < 30  = []
                  | otherwise              = [Asteroid path' (move asteroid) (Rot r)]
 
       return result
       where
-        ld         = largestRadius path'
+        lr         = largestRadius path'
+        psCollided = any (isColliding asteroid) ps
+
+updateParticles :: Float -> GameState -> GenState [Particle]
+updateParticles d (GameState { world = World { asteroids = as, projectiles = ps, particles = prts } }) = do
+  collidedAs    <- mapRandom updateCollided as
+  let newPrts' = concatMap updateProjectiles' prts
+
+  let collidedAs' = concat collidedAs
+
+  return $ newPrts' ++ collidedAs'
+  where
+    updateProjectiles' :: Particle -> [Particle]
+    updateProjectiles' p@(Particle (Asteroid path' _ (Rot r)) (Time t))
+      | t > 0     = [Particle (Asteroid path' (move p) (Rot r)) (Time $ t - d)]
+      | otherwise = []
+    updateCollided :: Asteroid -> GenState [Particle]
+    updateCollided asteroid@(Asteroid path' _ _) = do
+      a1@(Asteroid p _ r) <- splitAsteroid asteroid
+      a2@(Asteroid p2 _ r2) <- splitAsteroid asteroid
+      a3@(Asteroid p3 _ r3) <- splitAsteroid asteroid
+
+      let result | psCollided && lr < minAsteroidSize  = [
+                    Particle (Asteroid p (move a1) r) (Time particleLifeTime),
+                    Particle (Asteroid p2 (move a2) r2) (Time particleLifeTime),
+                    Particle (Asteroid p3 (move a3) r3) (Time particleLifeTime)
+                  ]
+                 | otherwise                           = []
+
+      return result
+      where
+        lr         = largestRadius path'
         psCollided = any (isColliding asteroid) ps
 
 randomAsteroid :: GenState Asteroid
@@ -65,7 +96,7 @@ splitAsteroid a = do
   dY    <- randomFloat 0 10
   dR    <- randomInt 0 360
   aPath <- asteroidPathScaled size size
-  return $ Asteroid aPath (updatePosition a (Vec2 dX dY)) (Rot dR)
+  return $ Asteroid aPath (setPosition a (Vec2 dX dY)) (Rot dR)
   where
     size = getHitboxRadius a / 3
 
@@ -80,13 +111,15 @@ updateWorld d gs
   | otherwise     = newGs {
                       world = (world newGs) {
                         asteroids = as,
-                        powerUps  = []
+                        powerUps  = [],
+                        particles = prts
                       },
                       stdGen = gen
                     }
   where
     (as, gen) = runState (updateAsteroids gs) (stdGen gs)
     newGs     = updateProjectiles d gs
+    (prts, _)   = runState (updateParticles d gs) (stdGen gs)
 
 -- obtainPowerUp :: PowerUpType -> Player -> Player
 -- obtainPowerUp (Heart n) player = player { health = HP (n + getHealth (health player)) }

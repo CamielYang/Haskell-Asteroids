@@ -35,3 +35,7 @@ instance Renderable Asteroid where
 
 instance Renderable Projectile where
   getPicture _ = circleSolid 2
+
+instance Renderable Particle where
+  getPicture (Particle a _) = getPicture a
+  getColor (Particle _ (Time t)) = withAlpha (t / particleLifeTime) white

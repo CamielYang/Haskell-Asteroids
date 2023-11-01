@@ -12,7 +12,9 @@ width,
   projectileSpeed,
   shootDistance,
   projectileLifeTime,
-  boundMargin :: Float
+  particleLifeTime,
+  boundMargin,
+  minAsteroidSize :: Float
 rotationSpeed :: Int
 width = 1500
 height = 750
@@ -24,7 +26,9 @@ projectileSpeed    = 10   -- Max amount of speed projectile can travel (pixels).
 rotationSpeed      = 10   -- Amount of degrees which can be added each frame.
 shootDistance      = 25   -- Starting point distance from center of spaceship.
 projectileLifeTime = 2    -- Time projectile can live.
+particleLifeTime   = 0.5    -- Time particle can live.
 boundMargin        = 35   -- Margin between screen edge before teleporting back into screen.
+minAsteroidSize    = 30   -- Minimum size of asteroid.
 
 newtype State s a = S (s -> (a, s))
 type GenState a   = State StdGen a
@@ -48,12 +52,12 @@ newtype Rotation  = Rot Int
 newtype Timer     = Time Float
 newtype Score     = Score Int deriving (Show)
 
-
 data Screen       = Menu | InGame | GameOver | Pause deriving (Eq)
 data Mode         = Singleplayer | Multiplayer deriving (Eq, Show)
 
 data Asteroid     = Asteroid Path Position Rotation
 data Projectile   = Projectile Position Rotation Timer
+data Particle     = Particle Asteroid Timer
 
 data WeaponType   = Default | Shotgun | Rifle deriving (Eq)
 data PowerUpType  = Heart Int | Weapon WeaponType
@@ -81,7 +85,8 @@ data PlayerKeys = PlayerKeys {
 data World = World {
   asteroids   :: [Asteroid],
   projectiles :: [Projectile],
-  powerUps    :: [PowerUp]
+  powerUps    :: [PowerUp],
+  particles   :: [Particle]
 }
 
 data GameState = GameState {
