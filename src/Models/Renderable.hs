@@ -4,7 +4,7 @@ import           Graphics.Gloss
 import           Models.Model
 import           Models.Positioned
 import           Models.SpaceShip
-import           Utils.Render      (renderSpaceShip)
+import           Utils.PathModels
 
 class (Positioned a) => Renderable a where
   getPicture :: a -> Picture
@@ -25,7 +25,7 @@ instance Renderable Player where
     where
       c | cd <= 0 || cd `mod'` 1 < 0.5 = pColor p
         | otherwise  = withAlpha 0.5 $ pColor p
-  getPicture p = renderSpaceShip $ getColor p
+  getPicture p = color (getColor p) $ lineLoop shipPath
   render p
     | isKilled p = blank
     | otherwise  = transform p $ getPicture p

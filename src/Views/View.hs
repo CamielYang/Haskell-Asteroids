@@ -7,7 +7,6 @@ module Views.View (
 
 import           Graphics.Gloss
 import           Models.Model
-import           Utils.Render
 import           Views.Game
 import           Views.GameOver
 import           Views.Menu

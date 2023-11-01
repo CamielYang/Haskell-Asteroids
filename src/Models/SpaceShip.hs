@@ -69,11 +69,28 @@ instance SpaceShip Player where
     | keyPressed gs (left $ pKeys p)  = setRotation p (-rotationSpeed)
     | keyPressed gs (right $ pKeys p) = setRotation p rotationSpeed
     | otherwise                       = rotation p
+      where
+        setRotation :: Player -> Int -> Rotation
+        setRotation (Player { rotation = Rot r }) d
+          | r + d > 360 = Rot (r + d - 360)
+          | r + d < 0   = Rot (r + d + 360)
+          | otherwise   = Rot (r + d)
 
   updateVelocity p gs
     | keyPressed gs (up $ pKeys p)   = setVelocity p force
     | keyPressed gs (down $ pKeys p) = setVelocity p (-force / 2)
     | otherwise                      = setVelocity p 0
+      where
+        setVelocity :: Player -> Float -> Velocity
+        setVelocity p@(Player { velocity = Vel vVec }) v = if lengthOfVector newV2 > maxVelocity
+          then velocity p
+          else Vel newV2
+          where
+            Rot d   = rotation p
+            dirVec  = degreeToVector d * Vec2 v v
+            dragVec = Vec2 drag drag
+            newV2   = (vVec + dirVec) * dragVec
+
 
   updatePlayer f dt gs p
     | isKilled p = gs

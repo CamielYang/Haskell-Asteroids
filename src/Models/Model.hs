@@ -4,7 +4,9 @@ import qualified Data.Set                           as S
 import           Graphics.Gloss.Interface.Pure.Game
 import           System.Random
 
-force,
+width,
+  height,
+  force,
   drag,
   maxVelocity,
   projectileSpeed,
@@ -12,6 +14,9 @@ force,
   projectileLifeTime,
   boundMargin :: Float
 rotationSpeed :: Int
+width = 1500
+height = 750
+
 force              = 0.3  -- Amount of velocity you can build each frame (pixels).
 drag               = 0.98 -- Amount of speed that is lost each frame (fraction)
 maxVelocity        = 10   -- Max amount of speed the ship can travel (pixel).
