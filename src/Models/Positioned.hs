@@ -18,7 +18,9 @@ withinBox (Pos (Vec2 x' y'))
 
 class Positioned a where
   getMoveVector :: a -> Vector2
+  getMoveVector _ = Vec2 0 0
   getRotation :: a -> Int
+  getRotation _ = 0
   getPosition :: a -> Vector2
   move :: a -> Position
   move a = withinBox $ Pos (getPosition a + getMoveVector a)

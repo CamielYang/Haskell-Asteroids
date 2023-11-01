@@ -6,8 +6,7 @@ import           Models.Model
 import           Models.ModelLib
 import           Models.Positioned
 import           Models.SpaceShip
-import           System.Random                      (StdGen)
-import           Utils.Keys
+import           Models.StateMonad
 import           Utils.PathModels
 import           Utils.Random
 import           Utils.Render
@@ -27,41 +26,48 @@ updateProjectiles d gs@(GameState { world = World { projectiles = ps, asteroids 
     notAged (Projectile _ _ (Time t))      = t > 0
     func p@(Projectile _ (Rot r) (Time t)) = Projectile (move p) (Rot r) (Time $ t - d)
 
-randomAsteroid :: StdGen -> (Asteroid, StdGen)
-randomAsteroid gen = (Asteroid path' (Pos (Vec2 x' y')) (Rot rot), gen4)
-  where
-    (path', gen1) = asteroidPath gen
-    (rot, gen2)   = randomInt 0 360 gen1
-    (x', gen3)    = randomFloat windowLeft windowRight gen2
-    (y', gen4)    = randomFloat windowBottom windowTop gen3
+updateAsteroids :: GameState -> GenState [Asteroid]
+updateAsteroids (GameState { world = World { asteroids = as, projectiles = ps } }) = do
+  collidedAs    <- mapRandom updateCollided as
+  spawnAsteroid <- randomAsteroid
 
-splitAsteroid :: Asteroid -> StdGen -> (Asteroid, StdGen)
-splitAsteroid a gen = (Asteroid path' (updatePosition a (Vec2 dX dY)) (Rot dR), gen4)
-  where
-    (dX, gen1)    = randomFloat 0 10 gen
-    (dY, gen2)    = randomFloat 0 10 gen1
-    (dR, gen3)    = randomInt 0 360 gen2
-    (path', gen4) = asteroidPathScaled size size gen3
-    size          = getHitboxRadius a / 3
+  let collidedAs' = concat collidedAs
+  let result | length as < 10 = spawnAsteroid : collidedAs'
+             | otherwise      = collidedAs'
 
-updateAsteroids :: GameState -> StdGen -> ([Asteroid], StdGen)
-updateAsteroids (GameState { world = World { asteroids = as, projectiles = ps } }) gen
-  | length as < 10 = (newAsteroid : newAs, gen2)
-  | otherwise      = (newAs, gen2)
+  return result
   where
-    (mapped, gen1)      = mapRandom func as gen
-    newAs               = concat mapped
-    (newAsteroid, gen2) = randomAsteroid gen1
-    func :: Asteroid -> StdGen -> ([Asteroid], StdGen)
-    func asteroid@(Asteroid path' _ (Rot r)) gen'
-      | psCollided && ld >= 30 = ([a1,a2], gen2')
-      | psCollided && ld < 30  = ([], gen')
-      | otherwise            = ([Asteroid path' (move asteroid) (Rot r)], gen')
+    updateCollided :: Asteroid -> GenState [Asteroid]
+    updateCollided asteroid@(Asteroid path' _ (Rot r)) = do
+      a1 <- splitAsteroid asteroid
+      a2 <- splitAsteroid asteroid
+
+      let result | psCollided && ld >= 30 = [a1,a2]
+                 | psCollided && ld < 30  = []
+                 | otherwise              = [Asteroid path' (move asteroid) (Rot r)]
+
+      return result
       where
-        (a1, gen1') = splitAsteroid asteroid gen
-        (a2, gen2') = splitAsteroid asteroid gen1'
-        ld          = largestRadius path'
-        psCollided    = any (isColliding asteroid) ps
+        ld         = largestRadius path'
+        psCollided = any (isColliding asteroid) ps
+
+randomAsteroid :: GenState Asteroid
+randomAsteroid = do
+  path' <- asteroidPath
+  rot   <- randomInt 0 360
+  x'    <- randomFloat windowLeft windowRight
+  y'    <- randomFloat windowBottom windowTop
+  return $ Asteroid path' (Pos (Vec2 x' y')) (Rot rot)
+
+splitAsteroid :: Asteroid -> GenState Asteroid
+splitAsteroid a = do
+  dX    <- randomFloat 0 10
+  dY    <- randomFloat 0 10
+  dR    <- randomInt 0 360
+  aPath <- asteroidPathScaled size size
+  return $ Asteroid aPath (updatePosition a (Vec2 dX dY)) (Rot dR)
+  where
+    size = getHitboxRadius a / 3
 
 isGameOver :: GameState -> Bool
 isGameOver gs = isKilled (playerOne gs) && (isSp || isKilled (playerTwo gs))
@@ -71,16 +77,16 @@ isGameOver gs = isKilled (playerOne gs) && (isSp || isKilled (playerTwo gs))
 updateWorld :: Float -> GameState -> GameState
 updateWorld d gs
   | isGameOver gs = gs { screen = GameOver }
-  | otherwise = newGs {
-    world = (world newGs) {
-      asteroids = newAs,
-      powerUps  = []
-    },
-    stdGen = newGen
-  }
+  | otherwise     = newGs {
+                      world = (world newGs) {
+                        asteroids = as,
+                        powerUps  = []
+                      },
+                      stdGen = gen
+                    }
   where
-    (newAs, newGen) = updateAsteroids gs (stdGen gs)
-    newGs           = updateProjectiles d gs
+    (as, gen) = runState (updateAsteroids gs) (stdGen gs)
+    newGs     = updateProjectiles d gs
 
 -- obtainPowerUp :: PowerUpType -> Player -> Player
 -- obtainPowerUp (Heart n) player = player { health = HP (n + getHealth (health player)) }
@@ -90,9 +96,7 @@ updateWorld d gs
 -- obtainPowerUp (Weapon weaponType) player = player { weapon = weaponType }
 
 updateGame :: Float -> GameState -> GameState
-updateGame d gs = gs2 {
-    keys = disableKeys (keys gs2) [SpecialKey KeyEnter, SpecialKey KeySpace]
-  }
+updateGame d gs = gs2
   where
     newGs = updateWorld d gs
     gs1 = updatePlayer
