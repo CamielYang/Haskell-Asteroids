@@ -5,6 +5,7 @@ import           Graphics.Gloss.Interface.Pure.Game
 import           Models.Collidable
 import           Models.Model
 import           Models.Positioned
+import           Utils.Keys
 import           Utils.Lib
 
 keyPressed :: GameState -> Key -> Bool
@@ -80,6 +81,7 @@ instance SpaceShip Player where
       world = (world gs) {
         projectiles = handleShoot newPlayer gs
       }
+    , keys = disableKeys (keys gs) [shoot $ pKeys p]
     }
     where
       newPlayer = p {

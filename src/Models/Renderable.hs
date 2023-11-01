@@ -1,4 +1,5 @@
 module Models.Renderable where
+import           Data.Fixed        (mod')
 import           Graphics.Gloss
 import           Models.Model
 import           Models.Positioned
@@ -22,7 +23,7 @@ class (Positioned a) => Renderable a where
 instance Renderable Player where
   getColor p@(Player { health = HP _ (Time cd)}) = c
     where
-      c | cd <= 0    = pColor p
+      c | cd <= 0 || cd `mod'` 1 < 0.5 = pColor p
         | otherwise  = withAlpha 0.5 $ pColor p
   getPicture p = renderSpaceShip $ getColor p
   render p

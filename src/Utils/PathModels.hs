@@ -5,7 +5,6 @@ module Utils.PathModels (
 ) where
 import           Graphics.Gloss
 import           Models.Model
-import           System.Random
 import           Utils.Point    (scalePath)
 import           Utils.Random
 

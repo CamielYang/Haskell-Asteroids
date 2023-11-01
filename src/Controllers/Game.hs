@@ -7,7 +7,6 @@ import           Models.ModelLib
 import           Models.Positioned
 import           Models.SpaceShip
 import           Models.StateMonad
-import           Utils.Keys
 import           Utils.PathModels
 import           Utils.Random
 import           Utils.Render
@@ -97,9 +96,7 @@ updateWorld d gs
 -- obtainPowerUp (Weapon weaponType) player = player { weapon = weaponType }
 
 updateGame :: Float -> GameState -> GameState
-updateGame d gs = gs2 {
-    keys = disableKeys (keys gs2) [SpecialKey KeyEnter, SpecialKey KeySpace]
-  }
+updateGame d gs = gs2
   where
     newGs = updateWorld d gs
     gs1 = updatePlayer

@@ -12,7 +12,7 @@ initialPlayer c pks = Player {
   pColor   = c,
   velocity = Vel Vec2 { x = 0, y = 0 },
   weapon   = Shotgun,
-  pKeys     = pks
+  pKeys    = pks
 }
 
 initialWorld :: World
