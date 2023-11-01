@@ -20,7 +20,7 @@ class (Positioned a) => Renderable a where
   renderMap = Pictures . map render
 
 instance Renderable Player where
-  getColor p@(Player { cooldown = Time cd}) = c
+  getColor p@(Player { health = HP _ (Time cd)}) = c
     where
       c | cd <= 0    = pColor p
         | otherwise  = withAlpha 0.5 $ pColor p

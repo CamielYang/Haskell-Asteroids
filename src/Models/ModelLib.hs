@@ -3,18 +3,15 @@ import qualified Data.Set                           as S
 import           Graphics.Gloss.Interface.Pure.Game
 import           Models.Model
 import           System.Random
-import           Utils.PathModels
 
 initialPlayer :: Color -> PlayerKeys -> Player
 initialPlayer c pks = Player {
-  health   = HP 3,
+  health   = HP 3 (Time 0),
   rotation = Rot 0,
   position = Pos Vec2 { x = 0, y = 0 },
   pColor   = c,
-  path     = shipPath,
   velocity = Vel Vec2 { x = 0, y = 0 },
   weapon   = Shotgun,
-  cooldown = Time 0,
   pKeys     = pks
 }
 

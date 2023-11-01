@@ -2,6 +2,7 @@ module Models.Collidable where
 import           Graphics.Gloss
 import           Models.Model
 import           Models.Positioned
+import           Utils.PathModels  (shipPath)
 
 largestRadius :: Path -> Float
 largestRadius [] = 0
@@ -22,7 +23,7 @@ class (Positioned a) => Collidable a where
       radius = getHitboxRadius a + getHitboxRadius b
 
 instance Collidable Player where
-  getHitboxRadius p = largestRadius (path p)
+  getHitboxRadius _ = largestRadius shipPath
 
 instance Collidable Asteroid where
   getHitboxRadius (Asteroid p _ _) = largestRadius p
