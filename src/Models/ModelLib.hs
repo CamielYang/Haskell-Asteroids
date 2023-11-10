@@ -11,7 +11,7 @@ initialPlayer c pks = Player {
   position = Pos Vec2 { x = 0, y = 0 },
   pColor   = c,
   velocity = Vel Vec2 { x = 0, y = 0 },
-  weapon   = Shotgun,
+  weapon   = Rifle,
   pKeys    = pks
 }
 
@@ -70,3 +70,6 @@ getPowerUps gs = powerUps $ world gs
 
 getParticles :: GameState -> [Particle]
 getParticles gs = particles $ world gs
+
+getScore :: GameState -> Int
+getScore gs = let (Score s) = score gs in s

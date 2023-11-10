@@ -8,6 +8,7 @@ import           Models.Positioned
 import           Models.SpaceShip
 import           Models.StateMonad
 import           Utils.PathModels
+import           Utils.Point                        (scalePath)
 import           Utils.Random
 import           Utils.Render
 
@@ -27,11 +28,13 @@ updateProjectiles d gs@(GameState { world = World { projectiles = ps, asteroids 
     func p@(Projectile _ (Rot r) (Time t)) = Projectile (move p) (Rot r) (Time $ t - d)
 
 updateAsteroids :: GameState -> GenState [Asteroid]
-updateAsteroids (GameState { world = World { asteroids = as, projectiles = ps } }) = do
+updateAsteroids gs@(GameState { world = World { asteroids = as, projectiles = ps } }) = do
   collidedAs    <- foldRandom updateCollided [] as
-  spawnAsteroid <- randomAsteroid
+  spawnAsteroid <- randomAsteroid gs
 
-  let result | length as < 50 = spawnAsteroid : collidedAs
+  let asteroidCount = round $ 100 + (1 / 10) * fromIntegral (getScore gs) -- Increasing amount of asteroids over time.
+
+  let result | length as < asteroidCount = spawnAsteroid : collidedAs
              | otherwise      = collidedAs
 
   return result
@@ -78,13 +81,22 @@ updateParticles d (GameState { world = World { asteroids = as, projectiles = ps,
         lr         = largestRadius path'
         psCollided = any (isColliding asteroid) ps
 
-randomAsteroid :: GenState Asteroid
-randomAsteroid = do
+randomAsteroid :: GameState -> GenState Asteroid
+randomAsteroid gs = do
   path' <- asteroidPath
   rot   <- randomInt 0 360
   x'    <- randomFloat windowLeft windowRight
   y'    <- randomFloat windowBottom windowTop
-  return $ Asteroid path' (Pos (Vec2 x' y')) (Rot rot)
+
+  let pos' = Pos (Vec2 x' y')
+  let rot' = Rot rot
+  let asteroid = Asteroid path' pos' rot'
+  let asteroidScaled = Asteroid (scalePath 1.5 path') pos' rot'
+
+  if isColliding asteroidScaled (playerOne gs) ||
+    (mode gs == Multiplayer && isColliding asteroidScaled (playerTwo gs))
+  then randomAsteroid gs
+  else return asteroid
 
 splitAsteroid :: Asteroid -> GenState Asteroid
 splitAsteroid a = do
