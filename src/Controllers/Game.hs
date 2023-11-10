@@ -30,24 +30,23 @@ updateProjectiles d gs@(GameState { world = World { projectiles = ps, asteroids 
 updateAsteroids :: GameState -> GenState [Asteroid]
 updateAsteroids gs@(GameState { world = World { asteroids = as, projectiles = ps } }) = do
   collidedAs    <- foldRandom updateCollided [] as
-  spawnAsteroid <- randomAsteroid gs
 
-  let asteroidCount = round $ 100 + (1 / 10) * fromIntegral (getScore gs) -- Increasing amount of asteroids over time.
+  let asteroidCount = round $ 10 + (1 / 10) * fromIntegral (getScore gs) -- Increasing amount of asteroids over time.
 
-  let result | length as < asteroidCount = spawnAsteroid : collidedAs
-             | otherwise      = collidedAs
-
-  return result
+  let result | length as < asteroidCount = do
+                 spawnAsteroid <- randomAsteroid gs
+                 return $ spawnAsteroid : collidedAs
+             | otherwise                 = return collidedAs
+      in result
   where
     updateCollided a asteroid@(Asteroid path' _ (Rot r)) = do
-      a1 <- splitAsteroid asteroid
-      a2 <- splitAsteroid asteroid
-
-      let result | psCollided && lr >= 30 = a1 : a2 : a
-                 | psCollided && lr < 30  = a
-                 | otherwise              = Asteroid path' (move asteroid) (Rot r) : a
-
-      return result
+      let result | psCollided && lr >= 30 = do
+                     a1 <- splitAsteroid asteroid
+                     a2 <- splitAsteroid asteroid
+                     return $ a1 : a2 :a
+                 | psCollided && lr < 30  = return a
+                 | otherwise              = return $ Asteroid path' (move asteroid) (Rot r) : a
+          in result
       where
         lr         = largestRadius path'
         psCollided = any (isColliding asteroid) ps
@@ -127,7 +126,7 @@ updateWorld d gs
   where
     (as, gen) = runState (updateAsteroids gs) (stdGen gs)
     newGs     = updateProjectiles d gs
-    (prts, _)   = runState (updateParticles d gs) (stdGen gs)
+    (prts, _) = runState (updateParticles d gs) (stdGen gs)
 
 -- obtainPowerUp :: PowerUpType -> Player -> Player
 -- obtainPowerUp (Heart n) player = player { health = HP (n + getHealth (health player)) }

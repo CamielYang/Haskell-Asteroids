@@ -5,16 +5,15 @@ module Utils.PathModels (
 ) where
 import           Graphics.Gloss
 import           Models.Model
+import           Utils.Lib
 import           Utils.Point    (scalePath)
 import           Utils.Random
 
 centerPath :: Path -> Path
 centerPath p = map (\(x', y') -> (x' - xInc, y' - yInc)) p
   where
-    minX  = minimum $ map fst p
-    minY  = minimum $ map snd p
-    maxX  = maximum $ map fst p
-    maxY  = maximum $ map snd p
+    (minX, maxX) = minMax $ map fst p
+    (minY, maxY) = minMax $ map snd p
     diffX = maxX - minX
     diffY = maxY - minY
     xInc  = minX + (diffX / 2)
