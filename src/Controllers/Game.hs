@@ -68,14 +68,13 @@ updateParticles d (GameState { world = World { asteroids = as, projectiles = ps,
       | t > 0     = Particle (Asteroid path' (move p) (Rot r)) (Time $ t - d) : b
       | otherwise = b
     updateCollided a asteroid@(Asteroid path' _ _) = do
-      p1 <- createParticle asteroid
-      p2 <- createParticle asteroid
-      p3 <- createParticle asteroid
-
-      let result | psCollided && lr < minAsteroidSize  = p1 : p2 : p3 : a
-                 | otherwise                           = a
-
-      return result
+      let result | psCollided && lr < minAsteroidSize = do
+                     p1 <- createParticle asteroid
+                     p2 <- createParticle asteroid
+                     p3 <- createParticle asteroid
+                     return $ p1 : p2 : p3 : a
+                 | otherwise                          = return a
+          in result
       where
         lr         = largestRadius path'
         psCollided = any (isColliding asteroid) ps
