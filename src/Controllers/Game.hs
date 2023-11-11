@@ -56,6 +56,17 @@ createParticle asteroid = do
   a@(Asteroid p _ r)   <- splitAsteroid asteroid
   return $ Particle (Asteroid p (move a) r) (Time particleLifeTime)
 
+createParticles :: Asteroid -> [Particle] -> GenState [Particle]
+createParticles asteroid ps = do
+  add <- randomBool
+
+  if (add && length ps < 5) || length ps < 2
+  then do
+    p1 <- createParticle asteroid
+    createParticles asteroid (p1 : ps)
+  else do
+    return ps
+
 updateParticles :: Float -> GameState -> GenState [Particle]
 updateParticles d (GameState { world = World { asteroids = as, projectiles = ps, particles = prts } }) = do
   collidedAs <- foldRandom updateCollided [] as
@@ -67,13 +78,10 @@ updateParticles d (GameState { world = World { asteroids = as, projectiles = ps,
     updateParticles' p@(Particle (Asteroid path' _ (Rot r)) (Time t)) b
       | t > 0     = Particle (Asteroid path' (move p) (Rot r)) (Time $ t - d) : b
       | otherwise = b
-    updateCollided a asteroid@(Asteroid path' _ _) = do
+    updateCollided ps' asteroid@(Asteroid path' _ _) = do
       let result | psCollided && lr < minAsteroidSize = do
-                     p1 <- createParticle asteroid
-                     p2 <- createParticle asteroid
-                     p3 <- createParticle asteroid
-                     return $ p1 : p2 : p3 : a
-                 | otherwise                          = return a
+                     createParticles asteroid []
+                 | otherwise = return ps'
           in result
       where
         lr         = largestRadius path'
@@ -117,7 +125,12 @@ updateWorld d gs
   | otherwise     = newGs {
                       world = (world newGs) {
                         asteroids = as,
-                        powerUps  = [],
+                        powerUps  = [
+                          PowerUp (Weapon Shotgun) (Pos (Vec2 (-100) 0)),
+                          PowerUp (Weapon Rifle) (Pos (Vec2 100 0)),
+                          PowerUp (Heart 1) (Pos (Vec2 0 100)),
+                          PowerUp (Weapon Default) (Pos (Vec2 0 (-100)))
+                        ],
                         particles = prts
                       },
                       stdGen = gen
