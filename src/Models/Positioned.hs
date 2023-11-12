@@ -42,6 +42,11 @@ instance Positioned Projectile where
   getRotation (Projectile _ (Rot r) _) = r
   getPosition (Projectile (Pos pv) _ _) = pv
 
+instance Positioned PowerUp where
+  getMoveVector _ = 0
+  getRotation _ = 0
+  getPosition (PowerUp _ (Pos pv)) = pv
+
 instance Positioned Particle where
   getMoveVector (Particle a _) = getMoveVector a * 2
   getRotation (Particle a _) = getRotation a

@@ -11,7 +11,7 @@ initialPlayer c pks = Player {
   position = Pos Vec2 { x = 0, y = 0 },
   pColor   = c,
   velocity = Vel Vec2 { x = 0, y = 0 },
-  weapon   = Rifle,
+  weapon   = Default,
   pKeys    = pks
 }
 
@@ -43,18 +43,20 @@ p2Keys = PlayerKeys {
 
 initialState :: GameState
 initialState = GameState {
-    world     = initialWorld,
-    screen    = Menu,
-    mode      = Singleplayer,
-    playerOne = initialPlayer red p1Keys,
-    playerTwo = (initialPlayer yellow p2Keys) { position = Pos Vec2 { x = 50, y = 0 }},
-    score     = Score 0,
-    keys      = S.empty,
-    stdGen    = mkStdGen 100
+    world          = initialWorld,
+    screen         = Menu,
+    mode           = Singleplayer,
+    playerOne      = initialPlayer red p1Keys,
+    playerTwo      = (initialPlayer yellow p2Keys) { position = Pos Vec2 { x = 50, y = 0 }},
+    score          = Score 0,
+    keys           = S.empty,
+    powerUpSpawned = Updated False,
+    highscore      = Highscore 0 (Updated False),
+    stdGen         = mkStdGen 100
   }
 
 newGame :: GameState -> Mode -> GameState
-newGame gs m = initialState { screen = InGame, mode = m, stdGen = stdGen gs }
+newGame gs m = initialState { screen = InGame, mode = m, stdGen = stdGen gs, highscore = highscore gs }
 
 addScore :: Score -> Score
 addScore (Score s) = Score (s + 1)

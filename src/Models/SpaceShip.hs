@@ -1,5 +1,6 @@
 module Models.SpaceShip where
 
+import           Data.List
 import qualified Data.Set                           as S
 import           Graphics.Gloss.Interface.Pure.Game
 import           Models.Collidable
@@ -95,15 +96,22 @@ instance SpaceShip Player where
     | isKilled p = gs
     | otherwise = (f newPlayer) {
       world = (world gs) {
-        projectiles = handleShoot newPlayer gs
+        projectiles = handleShoot newPlayer gs,
+        powerUps    = filter (not . isColliding p) (powerUps $ world gs)
       }
     , keys = disableKeys (keys gs) [shoot $ pKeys p]
     }
     where
+      collidedPowerUp = find (isColliding p) (powerUps $ world gs)
       newPlayer = p {
-        rotation = updateRotation p gs
+        weapon   = case collidedPowerUp of
+          Just (PowerUp (Weapon wt) _) -> wt
+          _                            -> weapon p
+      ,  rotation = updateRotation p gs
       , position = move p
       , velocity = updateVelocity p gs
-      , health   = HP (updateHealth p gs) (updateCooldown p dt gs)
+      , health   = case collidedPowerUp of
+          Just (PowerUp (Heart n) _) -> HP (getHp p + n) (updateCooldown p dt gs)
+          _                          -> HP (updateHealth p gs) (updateCooldown p dt gs)
       }
 

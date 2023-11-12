@@ -1,7 +1,11 @@
 module Utils.PathModels (
   shipPath,
   asteroidPathScaled,
-  asteroidPath
+  asteroidPath,
+  renderHeart,
+  renderShotgun,
+  renderRifle,
+  renderDefault
 ) where
 import           Graphics.Gloss
 import           Models.Model
@@ -30,3 +34,15 @@ asteroidPathScaled min' max' = do
 
 asteroidPath :: GenState Path
 asteroidPath = asteroidPathScaled 15 40
+
+renderHeart :: Picture
+renderHeart = lineLoop $ scalePath 10 $ centerPath [(0,0), (1,0), (1,-1), (2,-1), (2,-2), (1,-2), (1,-3), (0,-3), (0,-2), (-1,-2), (-1,-1), (0,-1)]
+
+renderShotgun :: Picture
+renderShotgun = lineLoop $ scalePath 10 $ centerPath [(0.2, 0), (1.8, 0), (2,-0.2), (2,-3.8), (2.2,-4), (-0.2,-4), (0,-3.8), (0,-0.2)]
+
+renderRifle :: Picture
+renderRifle = lineLoop $ scalePath 10 $ centerPath [(0.5,0), (0.8,-0.6), (0.8,-1.4), (1,-2), (1,-4), (0.8,-4.2), (1,-4.4), (0,-4.4), (0.2, -4.2), (0,-4), (0,-2), (0.2,-1.4), (0.2,-0.6)]
+
+renderDefault :: Picture
+renderDefault = lineLoop $ scalePath 5 $ centerPath [(0,0), (1,0), (2,-2), (2,-6), (-1,-6), (-1,-2)]

@@ -8,24 +8,93 @@ import           Models.Positioned
 import           Models.SpaceShip
 import           Models.StateMonad
 import           Utils.PathModels
-import           Utils.Point                        (scalePath)
+import           Utils.Point
 import           Utils.Random
-import           Utils.Render
+import           Utils.Render                       (windowBottom, windowLeft,
+                                                     windowRight, windowTop)
 
-updateProjectiles :: Float -> GameState -> GameState
-updateProjectiles _ gs@(GameState { world = World { projectiles = [] } }) = gs
-updateProjectiles d gs@(GameState { world = World { projectiles = ps, asteroids = as } }) =
-  gs {
-    world = (world gs) { projectiles = map func filtered },
-    score = if (not . all notCollided) ps
-            then addScore (score gs)
-            else score gs
-  }
+isCollidingPlayer :: (Collidable a) => GameState -> a -> Bool
+isCollidingPlayer gs a = isColliding a (playerOne gs) ||
+  (mode gs == Multiplayer && isColliding a (playerTwo gs))
+
+isGameOver :: GameState -> Bool
+isGameOver gs = isKilled (playerOne gs) && (isSp || isKilled (playerTwo gs))
   where
-    filtered                               = filter (\p -> notAged p && notCollided p) ps
-    notCollided p                          = not (any (isColliding p) as)
-    notAged (Projectile _ _ (Time t))      = t > 0
-    func p@(Projectile _ (Rot r) (Time t)) = Projectile (move p) (Rot r) (Time $ t - d)
+    isSp = mode gs == Singleplayer
+
+canSpawnPowerUp :: GameState -> Bool
+canSpawnPowerUp gs = getScore gs `mod` 50 == 0
+
+randomPowerUp :: GameState -> GenState PowerUp
+randomPowerUp gs = do
+  x' <- randomFloat windowLeft windowRight
+  y' <- randomFloat windowBottom windowTop
+  choice  <- randomInt 0 3
+
+  let pos' = Pos (Vec2 x' y')
+  let powerUp = case choice of
+        0 -> PowerUp (Weapon Shotgun) pos'
+        1 -> PowerUp (Weapon Rifle) pos'
+        2 -> PowerUp (Heart 1) pos'
+        _ -> PowerUp (Weapon Default) pos'
+
+  if isCollidingPlayer gs powerUp
+  then randomPowerUp gs
+  else return powerUp
+
+randomAsteroid :: GameState -> GenState Asteroid
+randomAsteroid gs = do
+  path' <- asteroidPath
+  rot   <- randomInt 0 360
+  x'    <- randomFloat windowLeft windowRight
+  y'    <- randomFloat windowBottom windowTop
+
+  let pos' = Pos (Vec2 x' y')
+  let rot' = Rot rot
+  let asteroid = Asteroid path' pos' rot'
+  let asteroidScaled = Asteroid (scalePath 1.5 path') pos' rot'
+
+  if isColliding asteroidScaled (playerOne gs) ||
+    (mode gs == Multiplayer && isColliding asteroidScaled (playerTwo gs))
+  then randomAsteroid gs
+  else return asteroid
+
+createParticle :: Asteroid -> GenState Particle
+createParticle asteroid = do
+  a@(Asteroid p _ r)   <- splitAsteroid asteroid
+  return $ Particle (Asteroid p (move a) r) (Time particleLifeTime)
+
+createParticles :: Asteroid -> [Particle] -> GenState [Particle]
+createParticles asteroid ps = do
+  add <- randomBool
+
+  if (add && length ps < 5) || length ps < 2
+  then do
+    p1 <- createParticle asteroid
+    createParticles asteroid (p1 : ps)
+  else do
+    return ps
+
+splitAsteroid :: Asteroid -> GenState Asteroid
+splitAsteroid a = do
+  dX    <- randomFloat 10 20
+  dY    <- randomFloat 10 20
+  dR    <- randomInt 0 360
+  aPath <- asteroidPathScaled size size
+  return $ Asteroid aPath (setPosition a (Vec2 dX dY)) (Rot dR)
+  where
+    size = getHitboxRadius a / 3
+
+updatePowerUps :: GameState -> GenState [PowerUp]
+updatePowerUps gs@(GameState { world = World { powerUps = ps }, powerUpSpawned = Updated u }) = do
+
+  let addPowerUp = canSpawnPowerUp gs && not u && getScore gs > 0
+
+  let result | addPowerUp && length ps < 5 = do
+                 spawnAsteroid <- randomPowerUp gs
+                 return $ spawnAsteroid : ps
+             | otherwise = return ps
+      in result
 
 updateAsteroids :: GameState -> GenState [Asteroid]
 updateAsteroids gs@(GameState { world = World { asteroids = as, projectiles = ps } }) = do
@@ -51,21 +120,20 @@ updateAsteroids gs@(GameState { world = World { asteroids = as, projectiles = ps
         lr         = largestRadius path'
         psCollided = any (isColliding asteroid) ps
 
-createParticle :: Asteroid -> GenState Particle
-createParticle asteroid = do
-  a@(Asteroid p _ r)   <- splitAsteroid asteroid
-  return $ Particle (Asteroid p (move a) r) (Time particleLifeTime)
-
-createParticles :: Asteroid -> [Particle] -> GenState [Particle]
-createParticles asteroid ps = do
-  add <- randomBool
-
-  if (add && length ps < 5) || length ps < 2
-  then do
-    p1 <- createParticle asteroid
-    createParticles asteroid (p1 : ps)
-  else do
-    return ps
+updateProjectiles :: Float -> GameState -> GameState
+updateProjectiles _ gs@(GameState { world = World { projectiles = [] } }) = gs
+updateProjectiles d gs@(GameState { world = World { projectiles = ps, asteroids = as } }) =
+  gs {
+    world = (world gs) { projectiles = map func filtered },
+    score = if (not . all notCollided) ps
+            then addScore (score gs)
+            else score gs
+  }
+  where
+    filtered                               = filter (\p -> notAged p && notCollided p) ps
+    notCollided p                          = not (any (isColliding p) as)
+    notAged (Projectile _ _ (Time t))      = t > 0
+    func p@(Projectile _ (Rot r) (Time t)) = Projectile (move p) (Rot r) (Time $ t - d)
 
 updateParticles :: Float -> GameState -> GenState [Particle]
 updateParticles d (GameState { world = World { asteroids = as, projectiles = ps, particles = prts } }) = do
@@ -87,70 +155,31 @@ updateParticles d (GameState { world = World { asteroids = as, projectiles = ps,
         lr         = largestRadius path'
         psCollided = any (isColliding asteroid) ps
 
-randomAsteroid :: GameState -> GenState Asteroid
-randomAsteroid gs = do
-  path' <- asteroidPath
-  rot   <- randomInt 0 360
-  x'    <- randomFloat windowLeft windowRight
-  y'    <- randomFloat windowBottom windowTop
+updateWorld :: Float -> GameState -> GenState GameState
+updateWorld d gs = do
+  ups  <- updatePowerUps gs
+  as   <- updateAsteroids gs
+  prts <- updateParticles d gs
 
-  let pos' = Pos (Vec2 x' y')
-  let rot' = Rot rot
-  let asteroid = Asteroid path' pos' rot'
-  let asteroidScaled = Asteroid (scalePath 1.5 path') pos' rot'
-
-  if isColliding asteroidScaled (playerOne gs) ||
-    (mode gs == Multiplayer && isColliding asteroidScaled (playerTwo gs))
-  then randomAsteroid gs
-  else return asteroid
-
-splitAsteroid :: Asteroid -> GenState Asteroid
-splitAsteroid a = do
-  dX    <- randomFloat 10 20
-  dY    <- randomFloat 10 20
-  dR    <- randomInt 0 360
-  aPath <- asteroidPathScaled size size
-  return $ Asteroid aPath (setPosition a (Vec2 dX dY)) (Rot dR)
-  where
-    size = getHitboxRadius a / 3
-
-isGameOver :: GameState -> Bool
-isGameOver gs = isKilled (playerOne gs) && (isSp || isKilled (playerTwo gs))
-  where
-    isSp = mode gs == Singleplayer
-
-updateWorld :: Float -> GameState -> GameState
-updateWorld d gs
-  | isGameOver gs = gs { screen = GameOver }
-  | otherwise     = newGs {
+  let result | isGameOver gs = gs { screen = GameOver }
+             | otherwise = newGs {
                       world = (world newGs) {
                         asteroids = as,
-                        powerUps  = [
-                          PowerUp (Weapon Shotgun) (Pos (Vec2 (-100) 0)),
-                          PowerUp (Weapon Rifle) (Pos (Vec2 100 0)),
-                          PowerUp (Heart 1) (Pos (Vec2 0 100)),
-                          PowerUp (Weapon Default) (Pos (Vec2 0 (-100)))
-                        ],
+                        powerUps  = ups,
                         particles = prts
                       },
-                      stdGen = gen
+                      powerUpSpawned = Updated $ canSpawnPowerUp gs
                     }
+  return result
   where
-    (as, gen) = runState (updateAsteroids gs) (stdGen gs)
-    newGs     = updateProjectiles d gs
-    (prts, _) = runState (updateParticles d gs) (stdGen gs)
-
--- obtainPowerUp :: PowerUpType -> Player -> Player
--- obtainPowerUp (Heart n) player = player { health = HP (n + getHealth (health player)) }
---   where
---     getHealth :: Health -> Int
---     getHealth (HP v) = v
--- obtainPowerUp (Weapon weaponType) player = player { weapon = weaponType }
+    newGs      = updateProjectiles d gs
 
 updateGame :: Float -> GameState -> GameState
 updateGame d gs = gs2
   where
-    newGs = updateWorld d gs
+    (gs', gen) = runState (updateWorld d gs) (stdGen gs)
+    newGs = gs' { stdGen = gen }
+
     gs1 = updatePlayer
             (\p -> newGs { playerOne = p })
             d

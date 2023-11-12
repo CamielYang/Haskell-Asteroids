@@ -10,8 +10,9 @@ import           Controllers.Pause
 
 update :: Float -> GameState -> IO GameState
 update d gs
-  | currentScreen == InGame = return $ updateGame d gs
-  | otherwise               = return gs
+  | currentScreen == InGame   = return $ updateGame d gs
+  | currentScreen == GameOver = updateGameOver gs
+  | otherwise                 = return gs
   where
     currentScreen = screen gs
 
