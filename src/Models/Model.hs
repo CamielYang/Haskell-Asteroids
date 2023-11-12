@@ -46,6 +46,7 @@ instance Num Vector2 where
   signum (Vec2 x' y')           = Vec2 (signum x') (signum y')
   fromInteger i                 = Vec2 (fromInteger i) (fromInteger i)
 
+newtype Updated   = Updated Bool deriving (Read)
 newtype Position  = Pos Vector2 deriving (Show)
 newtype Velocity  = Vel Vector2
 newtype Rotation  = Rot Int
@@ -54,6 +55,7 @@ newtype Score     = Score Int deriving (Show)
 
 data Screen       = Menu | InGame | GameOver | Pause deriving (Eq)
 data Mode         = Singleplayer | Multiplayer deriving (Eq, Show)
+data Highscore    = Highscore Int Updated deriving (Read)
 
 data Asteroid     = Asteroid Path Position Rotation
 data Projectile   = Projectile Position Rotation Timer
@@ -90,12 +92,14 @@ data World = World {
 }
 
 data GameState = GameState {
-  world     :: World,
-  screen    :: Screen,
-  mode      :: Mode,
-  playerOne :: Player,
-  playerTwo :: Player,
-  score     :: Score,
-  keys      :: S.Set Key,
-  stdGen    :: StdGen
+  world          :: World,
+  screen         :: Screen,
+  mode           :: Mode,
+  playerOne      :: Player,
+  playerTwo      :: Player,
+  score          :: Score,
+  keys           :: S.Set Key,
+  powerUpSpawned :: Updated,
+  stdGen         :: StdGen,
+  highscore      :: Highscore
 }

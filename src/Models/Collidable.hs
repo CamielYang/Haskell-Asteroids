@@ -30,3 +30,6 @@ instance Collidable Asteroid where
 
 instance Collidable Projectile where
   getHitboxRadius _ = 1
+
+instance Collidable PowerUp where
+  getHitboxRadius _ = 20

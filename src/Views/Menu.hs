@@ -5,7 +5,7 @@ import           Models.Renderable
 import           Utils.Render
 
 renderMenu :: GameState -> Picture
-renderMenu gs = Pictures [title, sp, mp]
+renderMenu gs@(GameState { highscore = Highscore hs _ }) = Pictures [title, sp, mp, hsText]
   where
     title = renderText "Asteroids" (-125) 100 0.5
     sp = Pictures [
@@ -19,3 +19,4 @@ renderMenu gs = Pictures [title, sp, mp]
           translate 50 0 $ getPicture $ playerTwo gs
         ]
       ]
+    hsText = renderText ("Highscore: " ++ show hs) (-80) (windowBottom + 20) 0.2

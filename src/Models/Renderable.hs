@@ -37,14 +37,16 @@ instance Renderable Projectile where
   getPicture _ = circleSolid 2
 
 instance Renderable PowerUp where
-  getPicture (PowerUp (Heart _) _) = renderHeart
-  getPicture (PowerUp (Weapon Shotgun) _) = renderShotgun
-  getPicture (PowerUp (Weapon Rifle) _) = renderRifle
-  getPicture (PowerUp (Weapon _) _) = renderDefault
-  getColor (PowerUp (Heart _) _) = red
-  getColor (PowerUp (Weapon _) _) = blue
-  transform (PowerUp _ (Pos (Vec2 x' y'))) = translate x' y'
-  render p = transform p $ getPicture p
+  getPicture (PowerUp t _) = case t of
+    Heart _ -> renderHeart
+    Weapon wt -> case wt of
+      Default -> renderDefault
+      Rifle   -> renderRifle
+      Shotgun -> renderShotgun
+  getColor (PowerUp t _) = case t of
+    Heart _ -> red
+    _       -> yellow
+
 instance Renderable Particle where
   getPicture (Particle a _) = getPicture a
   getColor (Particle _ (Time t)) = withAlpha (t / particleLifeTime) white
