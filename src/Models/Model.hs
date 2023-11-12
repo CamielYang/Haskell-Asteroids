@@ -100,6 +100,6 @@ data GameState = GameState {
   score          :: Score,
   keys           :: S.Set Key,
   powerUpSpawned :: Updated,
-  stdGen         :: StdGen,
-  highscore      :: Highscore
+  highscore      :: Highscore,
+  stdGen         :: StdGen
 }
