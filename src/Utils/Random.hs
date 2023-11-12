@@ -22,6 +22,12 @@ mapRandom f (x:xs) = do
   ys <- mapRandom f xs
   return $ y:ys
 
+foldRandom :: (a -> b -> GenState a) -> a -> [b] -> GenState a
+foldRandom _ a []     = return a
+foldRandom f a (x:xs) = do
+  a' <- f a x
+  foldRandom f a' xs
+
 deviatePath :: Float -> Float -> Path -> GenState Path
 deviatePath min' max' = mapRandom
   (\(a,b) -> do

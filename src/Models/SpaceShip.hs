@@ -44,7 +44,7 @@ instance SpaceShip Player where
       ps                     = projectiles (world gs)
       dirVec                 = degreeToVector rot * Vec2 shootDistance shootDistance
       r@(Rot rot)            = rotation p
-      create vec rot'        = Projectile (updatePosition p vec) rot' (Time projectileLifeTime)
+      create vec rot'        = Projectile (setPosition p vec) rot' (Time projectileLifeTime)
       weaponDefault          = create dirVec r
       weaponShotgun deg      = create dirVec (Rot $ rot + deg)
       weaponRifle distanceMp = create (dirVec * distanceMp) r
@@ -90,7 +90,6 @@ instance SpaceShip Player where
             dirVec  = degreeToVector d * Vec2 v v
             dragVec = Vec2 drag drag
             newV2   = (vVec + dirVec) * dragVec
-
 
   updatePlayer f dt gs p
     | isKilled p = gs
