@@ -37,7 +37,18 @@ randomPowerUp = do
   return result
 
 updatePowerUp :: GameState -> GenState [PowerUp]
-updatePowerUp = undefined
+updatePowerUp gs@(GameState { world = World {powerUps = pu}}) = do
+  x'         <- randomFloat windowLeft windowRight
+  y'         <- randomFloat windowBottom windowTop
+  newPowerUp <- randomPowerUp
+  let currentScore = getScore gs
+  let pos' = Pos (Vec2 x' y')
+  let | currentScore `div` 100 <= length pu = return $ PowerUp newPowerUp pos' : pu
+      | otherwise return pu
+  -- De guard gaat nog niet helemaal goed maar zo zou dit hem ongeveer moeten zijn
+  -- verder moet er nog een check zijn dat als er bijvoorbeeld 400 punten zijn maar 3 items al opgepakt zijn dat er nog maar 1 item mag liggen
+  -- daarna alleen nog de collision functie om echt de powerups te kunnen op te pakken
+  
 
 updateAsteroids :: GameState -> GenState [Asteroid]
 updateAsteroids gs@(GameState { world = World { asteroids = as, projectiles = ps } }) = do
@@ -137,16 +148,16 @@ updateWorld d gs
   | otherwise     = newGs {
                       world = (world newGs) {
                         asteroids = as,
-                        powerUps  = [],
+                        powerUps  = newUp,
                         particles = prts
                       },
-                      stdGen = gen
+                      stdGen = gen3
                     }
   where
-    newUp     = runState (updatePowerUp gs) (stdGen gs)
-    (as, gen) = runState (updateAsteroids gs) (stdGen gs)
-    newGs     = updateProjectiles d gs
-    (prts, _) = runState (updateParticles d gs) (stdGen gs)
+    (newUp, gen1) = runState (updatePowerUp gs) (stdGen gs) -- uitschrijven
+    (as, gen2)  = runState (updateAsteroids gs) gen1
+    newGs      = updateProjectiles d gs
+    (prts, gen3)  = runState (updateParticles d gs) gen2
 
 updateGame :: Float -> GameState -> GameState
 updateGame d gs = gs2
