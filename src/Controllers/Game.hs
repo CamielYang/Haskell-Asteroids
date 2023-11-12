@@ -10,7 +10,8 @@ import           Models.StateMonad
 import           Utils.PathModels
 import           Utils.Point
 import           Utils.Random
-import           Utils.Render
+import           Utils.Render                       (windowBottom, windowLeft,
+                                                     windowRight, windowTop)
 
 isCollidingPlayer :: (Collidable a) => GameState -> a -> Bool
 isCollidingPlayer gs a = isColliding a (playerOne gs) ||
@@ -85,9 +86,9 @@ splitAsteroid a = do
     size = getHitboxRadius a / 3
 
 updatePowerUps :: GameState -> GenState [PowerUp]
-updatePowerUps gs@(GameState { world = World { powerUps = ps }, powerUpSpawned = Updated pus }) = do
+updatePowerUps gs@(GameState { world = World { powerUps = ps }, powerUpSpawned = Updated u }) = do
 
-  let addPowerUp = canSpawnPowerUp gs && not pus
+  let addPowerUp = canSpawnPowerUp gs && not u && getScore gs > 0
 
   let result | addPowerUp && length ps < 5 = do
                  spawnAsteroid <- randomPowerUp gs
