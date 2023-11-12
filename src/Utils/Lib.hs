@@ -19,19 +19,9 @@ lengthOfVector (Vec2 x' y') = sqrt (x' * x' + y' * y')
 v2ToTuple :: Vector2 -> (Float, Float)
 v2ToTuple (Vec2 x' y') = (x', y')
 
-setRotation :: Player -> Int -> Rotation
-setRotation (Player { rotation = Rot r }) d
-  | r + d > 360 = Rot (r + d - 360)
-  | r + d < 0   = Rot (r + d + 360)
-  | otherwise   = Rot (r + d)
-
-setVelocity :: Player -> Float -> Velocity
-setVelocity p@(Player { velocity = Vel vVec }) v = if lengthOfVector newV2 > maxVelocity
-  then velocity p
-  else Vel newV2
+minMax :: (Ord a) => [a] -> (a, a)
+minMax [] = error "minMax: empty list"
+minMax [x] = (x, x)
+minMax (x:xs) = (min x xsMin, max x xsMax)
   where
-    Rot d   = rotation p
-    dirVec  = degreeToVector d * Vec2 v v
-    dragVec = Vec2 drag drag
-    newV2   = (vVec + dirVec) * dragVec
-
+    (xsMin, xsMax) = minMax xs

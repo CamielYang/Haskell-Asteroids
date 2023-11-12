@@ -18,12 +18,14 @@ withinBox (Pos (Vec2 x' y'))
 
 class Positioned a where
   getMoveVector :: a -> Vector2
+  getMoveVector _ = Vec2 0 0
   getRotation :: a -> Int
+  getRotation _ = 0
   getPosition :: a -> Vector2
   move :: a -> Position
   move a = withinBox $ Pos (getPosition a + getMoveVector a)
-  updatePosition :: a -> Vector2 -> Position
-  updatePosition a vec = Pos (getPosition a + vec)
+  setPosition :: a -> Vector2 -> Position
+  setPosition a vec = Pos (getPosition a + vec)
 
 instance Positioned Player where
   getMoveVector (Player { velocity = Vel vVec }) = vVec
@@ -44,3 +46,8 @@ instance Positioned PowerUp where
   getMoveVector _ = 0
   getRotation _ = 0
   getPosition (PowerUp _ (Pos pv)) = pv
+
+instance Positioned Particle where
+  getMoveVector (Particle a _) = getMoveVector a * 2
+  getRotation (Particle a _) = getRotation a
+  getPosition (Particle a _) = getPosition a

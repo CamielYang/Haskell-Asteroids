@@ -36,6 +36,7 @@ library
       Models.Positioned
       Models.Renderable
       Models.SpaceShip
+      Models.StateMonad
       Utils.Keys
       Utils.Lib
       Utils.PathModels

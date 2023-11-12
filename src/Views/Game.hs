@@ -20,6 +20,7 @@ renderGame gs = Pictures [
       -- World
       renderMap $ getProjectiles gs,
       renderMap $ getAsteroids gs,
+      renderMap $ getParticles gs,
 
       -- UI
       title,

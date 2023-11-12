@@ -1,10 +1,10 @@
 module Models.Renderable where
+import           Data.Fixed        (mod')
 import           Graphics.Gloss
 import           Models.Model
 import           Models.Positioned
 import           Models.SpaceShip
 import           Utils.PathModels
-import           Utils.Render      (renderSpaceShip)
 
 class (Positioned a) => Renderable a where
   getPicture :: a -> Picture
@@ -21,11 +21,11 @@ class (Positioned a) => Renderable a where
   renderMap = Pictures . map render
 
 instance Renderable Player where
-  getColor p@(Player { cooldown = Time cd}) = c
+  getColor p@(Player { health = HP _ (Time cd)}) = c
     where
-      c | cd <= 0    = pColor p
+      c | cd <= 0 || cd `mod'` 1 < 0.5 = pColor p
         | otherwise  = withAlpha 0.5 $ pColor p
-  getPicture p = renderSpaceShip $ getColor p
+  getPicture p = color (getColor p) $ lineLoop shipPath
   render p
     | isKilled p = blank
     | otherwise  = transform p $ getPicture p
@@ -45,3 +45,6 @@ instance Renderable PowerUp where
   getColor (PowerUp (Weapon _) _) = blue
   transform (PowerUp _ (Pos (Vec2 x' y'))) = translate x' y'
   render p = transform p $ getPicture p
+instance Renderable Particle where
+  getPicture (Particle a _) = getPicture a
+  getColor (Particle _ (Time t)) = withAlpha (t / particleLifeTime) white
