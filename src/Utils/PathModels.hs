@@ -1,12 +1,17 @@
 module Utils.PathModels (
   shipPath,
   asteroidPathScaled,
-  asteroidPath
+  asteroidPath,
+  renderHeart,
+  renderShotgun,
+  renderRifle,
+  renderDefault
 ) where
 import           Graphics.Gloss
 import           System.Random
 import           Utils.Point    (scalePath)
 import           Utils.Random
+import Data.Fixed (Pico)
 
 centerPath :: Path -> Path
 centerPath p = map (\(x', y') -> (x' - xInc, y' - yInc)) p
@@ -31,3 +36,15 @@ asteroidPathScaled min' max' gen = (scalePath size $ centerPath asteroidGen, gen
 
 asteroidPath :: StdGen -> (Path, StdGen)
 asteroidPath = asteroidPathScaled 15 40
+
+renderHeart :: Picture
+renderHeart = lineLoop [(0,0), (1,0), (1,-1), (2,-1), (2,-2), (1,-2), (1,-3), (0,-3), (0,-2), (-1,-2), (-1,-1), (0,-1)]
+
+renderShotgun :: Picture
+renderShotgun = lineLoop [(1,0), (1,2), (2.03,2.38), (3,2), (3,0)]
+
+renderRifle :: Picture
+renderRifle = lineLoop [(1,0), (1,2), (1.46,2.6), (2,2), (2,0)]
+
+renderDefault :: Picture
+renderDefault = lineLoop [(1,0), (1,1), (1.46,1.58), (2,1), (2,0)]

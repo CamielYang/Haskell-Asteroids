@@ -39,3 +39,8 @@ instance Positioned Projectile where
   getMoveVector (Projectile _ (Rot rot) _) = degreeToVector rot * Vec2 projectileSpeed projectileSpeed
   getRotation (Projectile _ (Rot r) _) = r
   getPosition (Projectile (Pos pv) _ _) = pv
+
+instance Positioned PowerUp where
+  getMoveVector _ = 0
+  getRotation _ = 0
+  getPosition (PowerUp _ (Pos pv)) = pv

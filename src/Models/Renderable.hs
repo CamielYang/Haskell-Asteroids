@@ -3,6 +3,7 @@ import           Graphics.Gloss
 import           Models.Model
 import           Models.Positioned
 import           Models.SpaceShip
+import           Utils.PathModels
 import           Utils.Render      (renderSpaceShip)
 
 class (Positioned a) => Renderable a where
@@ -34,3 +35,13 @@ instance Renderable Asteroid where
 
 instance Renderable Projectile where
   getPicture _ = circleSolid 2
+
+instance Renderable PowerUp where
+  getPicture (PowerUp (Heart _) _) = renderHeart
+  getPicture (PowerUp (Weapon Shotgun) _) = renderShotgun
+  getPicture (PowerUp (Weapon Rifle) _) = renderRifle
+  getPicture (PowerUp (Weapon _) _) = renderDefault
+  getColor (PowerUp (Heart _) _) = red
+  getColor (PowerUp (Weapon _) _) = blue
+  transform (PowerUp _ (Pos (Vec2 x' y'))) = translate x' y'
+  render p = transform p $ getPicture p

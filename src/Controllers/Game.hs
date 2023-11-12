@@ -27,6 +27,15 @@ updateProjectiles d gs@(GameState { world = World { projectiles = ps, asteroids 
     notAged (Projectile _ _ (Time t))      = t > 0
     func p@(Projectile _ (Rot r) (Time t)) = Projectile (move p) (Rot r) (Time $ t - d)
 
+randomPowerUp :: StdGen -> GenState
+randomPowerUp gen
+  | choice == 0 = Heart 10, gen'
+  | choice == 1 = (Weapon Default, gen')
+  | choice == 2 = (Weapon Shotgun, gen')
+  | choice == 3 = (Weapon Rifle, gen')
+  where
+    (choice, gen') = randomInt 0 3 gen
+
 randomAsteroid :: StdGen -> (Asteroid, StdGen)
 randomAsteroid gen = (Asteroid path' (Pos (Vec2 x' y')) (Rot rot), gen4)
   where
@@ -43,6 +52,9 @@ splitAsteroid a gen = (Asteroid path' (updatePosition a (Vec2 dX dY)) (Rot dR), 
     (dR, gen3)    = randomInt 0 360 gen2
     (path', gen4) = asteroidPathScaled size size gen3
     size          = getHitboxRadius a / 3
+
+updatePowerups :: GameState -> stdGen -> ([PowerUp], StdGen)
+updatePowerups = 
 
 updateAsteroids :: GameState -> StdGen -> ([Asteroid], StdGen)
 updateAsteroids (GameState { world = World { asteroids = as, projectiles = ps } }) gen
@@ -79,15 +91,16 @@ updateWorld d gs
     stdGen = newGen
   }
   where
+    newPu = updatePowerups -- etc
     (newAs, newGen) = updateAsteroids gs (stdGen gs)
     newGs           = updateProjectiles d gs
 
--- obtainPowerUp :: PowerUpType -> Player -> Player
--- obtainPowerUp (Heart n) player = player { health = HP (n + getHealth (health player)) }
---   where
---     getHealth :: Health -> Int
---     getHealth (HP v) = v
--- obtainPowerUp (Weapon weaponType) player = player { weapon = weaponType }
+obtainPowerUp :: PowerUpType -> Player -> Player
+obtainPowerUp (Heart n) player = player { health = HP (n + getHealth (health player)) }
+  where
+    getHealth :: Health -> Int
+    getHealth (HP v) = v
+obtainPowerUp (Weapon weaponType) player = player { weapon = weaponType }
 
 updateGame :: Float -> GameState -> GameState
 updateGame d gs = gs2 {
